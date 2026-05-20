@@ -259,55 +259,120 @@ nav.scrolled{height:60px;background:rgba(3,8,16,0.97);}
 
 /* Hero Right - 3D Card Stack */
 .hero-right{position:relative;display:flex;align-items:center;justify-content:center;}
-.card-stack{position:relative;width:360px;height:440px;}
-.stack-card{
-  position:absolute;width:300px;
-  background:rgba(6,15,28,0.9);
-  border-radius:4px;
-  padding:28px;
-  backdrop-filter:blur(10px);
-  transition:all 0.5s cubic-bezier(0.23,1,0.32,1);
+
+/* ===== SMART FARM DASHBOARD ===== */
+.sf-dashboard{
+  width:380px;
+  background:rgba(4,12,8,0.92);
+  border:1px solid rgba(0,255,136,0.25);
+  border-radius:12px;
+  overflow:hidden;
+  backdrop-filter:blur(16px);
+  box-shadow:0 0 60px rgba(0,255,136,0.1), 0 30px 80px rgba(0,0,0,0.6);
+  position:relative;
 }
-.stack-card:nth-child(1){
-  top:0;left:30px;
-  border:1px solid var(--border);
-  transform:rotate(-4deg);
-  box-shadow:0 20px 60px rgba(0,0,0,0.5);
-  z-index:1;
+/* HUD 코너 장식 */
+.sf-dashboard::before,.sf-dashboard::after{
+  content:'';position:absolute;width:16px;height:16px;
+  border-color:var(--green);border-style:solid;
 }
-.stack-card:nth-child(2){
-  top:20px;left:15px;
-  border:1px solid var(--gborder);
-  transform:rotate(-1deg);
-  box-shadow:0 20px 60px rgba(0,0,0,0.4);
-  z-index:2;
+.sf-dashboard::before{top:8px;left:8px;border-width:2px 0 0 2px;}
+.sf-dashboard::after{bottom:8px;right:8px;border-width:0 2px 2px 0;}
+
+/* 헤더 */
+.sf-header{
+  padding:14px 20px;
+  background:rgba(0,255,136,0.06);
+  border-bottom:1px solid rgba(0,255,136,0.15);
+  display:flex;align-items:center;justify-content:space-between;
 }
-.stack-card:nth-child(3){
-  top:40px;left:0px;
-  border:1px solid rgba(201,168,76,0.3);
-  transform:rotate(1deg);
-  box-shadow:0 20px 60px rgba(0,0,0,0.3),0 0 40px rgba(201,168,76,0.08);
-  z-index:3;
+.sf-header-left{display:flex;align-items:center;gap:10px;}
+.sf-live-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:livePulse 1.5s ease-in-out infinite;
 }
-.stack-card:hover{transform:rotate(0deg) translateY(-10px) !important;z-index:10;}
-.card-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(0,255,136,0.08);border:1px solid var(--gborder);
-  border-radius:2px;padding:4px 12px;margin-bottom:16px;
+@keyframes livePulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--green);}50%{opacity:0.5;box-shadow:0 0 16px var(--green);}}
+.sf-header-title{font-family:var(--font-code);font-size:12px;color:var(--green);letter-spacing:2px;}
+.sf-header-sub{font-family:var(--font-code);font-size:10px;color:var(--muted);}
+.sf-time{font-family:var(--font-code);font-size:11px;color:var(--muted);}
+
+/* 센서 3개 그리드 */
+.sf-sensors{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:1px;background:rgba(0,255,136,0.08);
+  border-bottom:1px solid rgba(0,255,136,0.1);
 }
-.card-chip span{font-family:var(--font-code);font-size:10px;color:var(--green);letter-spacing:2px;}
-.chip-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.sf-sensor{
+  padding:16px 12px;
+  background:rgba(4,12,8,0.95);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:background 0.3s;
+}
+.sf-sensor:hover{background:rgba(0,255,136,0.05);}
+.sf-sensor-icon{font-size:22px;}
+.sf-sensor-label{font-family:var(--font-code);font-size:9px;color:var(--muted);letter-spacing:2px;}
+.sf-sensor-val{font-family:var(--font-code);font-size:20px;font-weight:700;line-height:1;}
+.sf-sensor-val.ok{color:var(--green);}
+.sf-sensor-val.warn{color:var(--gold);}
+.sf-sensor-unit{font-family:var(--font-code);font-size:10px;color:var(--muted);}
+
+/* 게이지 바 */
+.sf-gauge{
+  width:100%;height:4px;
+  background:rgba(255,255,255,0.08);border-radius:2px;
+  margin-top:4px;overflow:hidden;
+}
+.sf-gauge-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--green2),var(--green));
+  transition:width 1s ease;
+}
+.sf-gauge-fill.warn{background:linear-gradient(90deg,var(--gold),#FFD700);}
+
+/* 제어 상태 */
+.sf-controls{
+  padding:14px 20px;
+  border-bottom:1px solid rgba(0,255,136,0.08);
+  display:flex;flex-direction:column;gap:8px;
+}
+.sf-control-row{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sf-control-name{font-family:var(--font-code);font-size:11px;color:var(--muted);}
+.sf-control-status{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--font-code);font-size:11px;font-weight:700;
+}
+.sf-status-dot{width:6px;height:6px;border-radius:50%;}
+.sf-status-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
+.sf-status-dot.off{background:var(--muted);}
+.sf-status-dot.warn{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+
+/* AI 분석 푸터 */
+.sf-ai{
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sf-ai-label{font-family:var(--font-code);font-size:10px;color:var(--muted);letter-spacing:1px;}
+.sf-ai-result{
+  font-family:var(--font-code);font-size:11px;font-weight:700;
+  color:var(--green);
+  display:flex;align-items:center;gap:6px;
+}
+.sf-ai-icon{font-size:14px;}
+
+/* 스캔 라인 */
+.sf-scan{
+  position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,136,0.4),transparent);
+  animation:sfScan 4s linear infinite;
+  pointer-events:none;
+}
+@keyframes sfScan{from{top:0;}to{top:100%;}}
+
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-.card-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4;}
-.card-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
-.card-data{display:flex;flex-direction:column;gap:8px;}
-.data-row{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:6px 10px;
-  background:rgba(255,255,255,0.03);border-radius:2px;
-}
-.data-key{font-family:var(--font-code);font-size:10px;color:var(--muted);}
-.data-val{font-family:var(--font-code);font-size:11px;font-weight:700;}
 .data-val.g{color:var(--green);}
 .data-val.gold{color:var(--gold);}
 .data-val.w{color:var(--text);}
@@ -828,32 +893,84 @@ footer{
       </div>
     </div>
     <div class="hero-right">
-      <div class="card-stack">
-        <div class="stack-card">
-          <div class="card-chip"><div class="chip-dot"></div><span>SMART FARM</span></div>
-          <div class="card-title">스마트팜 IoT<br>자동 제어</div>
-          <div class="card-data">
-            <div class="data-row"><span class="data-key">TEMP</span><span class="data-val g">22.5°C ✓</span></div>
-            <div class="data-row"><span class="data-key">HUMID</span><span class="data-val g">68% ✓</span></div>
-            <div class="data-row"><span class="data-key">CO2</span><span class="data-val gold">455ppm</span></div>
+      <div class="sf-dashboard">
+        <div class="sf-scan"></div>
+
+        <!-- 헤더 -->
+        <div class="sf-header">
+          <div class="sf-header-left">
+            <div class="sf-live-dot"></div>
+            <div>
+              <div class="sf-header-title">🌱 SMART FARM MONITOR</div>
+              <div class="sf-header-sub">송도 스마트팜 1호 — 실시간</div>
+            </div>
+          </div>
+          <div class="sf-time" id="sf-clock">00:00:00</div>
+        </div>
+
+        <!-- 센서 3개 -->
+        <div class="sf-sensors">
+          <div class="sf-sensor">
+            <div class="sf-sensor-icon">🌡️</div>
+            <div class="sf-sensor-label">TEMP</div>
+            <div class="sf-sensor-val ok" id="sf-temp">22.5</div>
+            <div class="sf-sensor-unit">°C</div>
+            <div class="sf-gauge"><div class="sf-gauge-fill" id="sf-temp-bar" style="width:62%;"></div></div>
+          </div>
+          <div class="sf-sensor">
+            <div class="sf-sensor-icon">💧</div>
+            <div class="sf-sensor-label">HUMID</div>
+            <div class="sf-sensor-val ok" id="sf-humid">68.3</div>
+            <div class="sf-sensor-unit">%</div>
+            <div class="sf-gauge"><div class="sf-gauge-fill" id="sf-humid-bar" style="width:68%;"></div></div>
+          </div>
+          <div class="sf-sensor">
+            <div class="sf-sensor-icon">🌬️</div>
+            <div class="sf-sensor-label">CO2</div>
+            <div class="sf-sensor-val warn" id="sf-co2">455</div>
+            <div class="sf-sensor-unit">ppm</div>
+            <div class="sf-gauge"><div class="sf-gauge-fill warn" id="sf-co2-bar" style="width:55%;"></div></div>
           </div>
         </div>
-        <div class="stack-card">
-          <div class="card-chip"><div class="chip-dot"></div><span>SAFETY</span></div>
-          <div class="card-title">산업안전<br>실시간 모니터링</div>
-          <div class="card-data">
-            <div class="data-row"><span class="data-key">GAS</span><span class="data-val g">SAFE ✓</span></div>
-            <div class="data-row"><span class="data-key">WORKER</span><span class="data-val g">12명 감지</span></div>
-            <div class="data-row"><span class="data-key">AI</span><span class="data-val w">ACTIVE</span></div>
+
+        <!-- 제어 상태 -->
+        <div class="sf-controls">
+          <div class="sf-control-row">
+            <span class="sf-control-name">🚿 관수 펌프</span>
+            <div class="sf-control-status">
+              <div class="sf-status-dot on"></div>
+              <span style="color:var(--green);">자동 운영중</span>
+            </div>
+          </div>
+          <div class="sf-control-row">
+            <span class="sf-control-name">🪟 천창</span>
+            <div class="sf-control-status">
+              <div class="sf-status-dot on"></div>
+              <span style="color:var(--green);">OPEN</span>
+            </div>
+          </div>
+          <div class="sf-control-row">
+            <span class="sf-control-name">💨 CO2 발생기</span>
+            <div class="sf-control-status">
+              <div class="sf-status-dot warn"></div>
+              <span style="color:var(--gold);">대기중</span>
+            </div>
+          </div>
+          <div class="sf-control-row">
+            <span class="sf-control-name">💡 보광등</span>
+            <div class="sf-control-status">
+              <div class="sf-status-dot off"></div>
+              <span style="color:var(--muted);">OFF</span>
+            </div>
           </div>
         </div>
-        <div class="stack-card">
-          <div class="card-chip"><div class="chip-dot"></div><span>XR DEVICE</span></div>
-          <div class="card-title">AR 스마트글래스<br>현장 뷰</div>
-          <div class="card-data">
-            <div class="data-row"><span class="data-key">VIEW</span><span class="data-val g">AR LIVE ●</span></div>
-            <div class="data-row"><span class="data-key">DATA</span><span class="data-val gold">실시간 연동</span></div>
-            <div class="data-row"><span class="data-key">AI</span><span class="data-val w">분석중...</span></div>
+
+        <!-- AI 분석 -->
+        <div class="sf-ai">
+          <div class="sf-ai-label">🤖 AI 생육 분석</div>
+          <div class="sf-ai-result">
+            <span class="sf-ai-icon">✅</span>
+            생육 상태 최적
           </div>
         </div>
       </div>
@@ -1430,7 +1547,42 @@ const revealObs=new IntersectionObserver((entries)=>{
 },{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 
-/* ===== FORM ===== */
+/* ===== SMART FARM LIVE DATA ===== */
+// 시계
+function updateClock(){
+  const now = new Date();
+  const t = [now.getHours(),now.getMinutes(),now.getSeconds()]
+    .map(v=>String(v).padStart(2,'0')).join(':');
+  const el = document.getElementById('sf-clock');
+  if(el) el.textContent = t;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// 센서 값 미세 변동
+const sfData = {
+  temp:  { base:22.5,  range:0.8, el:'sf-temp',  bar:'sf-temp-bar',  max:40,  warnVal:35 },
+  humid: { base:68.3,  range:2.0, el:'sf-humid', bar:'sf-humid-bar', max:100, warnVal:90 },
+  co2:   { base:455,   range:15,  el:'sf-co2',   bar:'sf-co2-bar',   max:800, warnVal:600 },
+};
+function updateSensors(){
+  Object.values(sfData).forEach(d=>{
+    const val = d.base + (Math.random()-0.5)*d.range;
+    const rounded = d.el==='sf-co2' ? Math.round(val) : val.toFixed(1);
+    const elVal = document.getElementById(d.el);
+    const elBar = document.getElementById(d.bar);
+    if(!elVal||!elBar) return;
+    elVal.textContent = rounded;
+    const pct = Math.min(100, (val/d.max)*100);
+    elBar.style.width = pct+'%';
+    const isWarn = val >= d.warnVal;
+    elVal.className = 'sf-sensor-val '+(isWarn?'warn':'ok');
+    elBar.className = 'sf-gauge-fill'+(isWarn?' warn':'');
+  });
+}
+setInterval(updateSensors, 2000);
+
+
 function handleSubmit(){
   const btn=document.querySelector('.cf-submit');
   btn.textContent='✓ 문의가 접수되었습니다';
