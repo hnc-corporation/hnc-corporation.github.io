@@ -1,1 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#0d1a0d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Smart Farm" />
+  <title>🌾 Smart Farm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
 
+  <style>
+    /* ── 기본 리셋 ── */
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    :root {
+      --green:      #4caf50;
+      --green-dark: #2e7d32;
+      --blue:       #1565c0;
+      --purple:     #4a148c;
+      --gray:       #263238;
+      --red:        #b71c1c;
+      --bg:         #0a0a0a;
+      --card:       #111111;
+      --border:     #1a1a1a;
+      --mono:       'Space Mono', monospace;
+      --sans:       'Noto Sans KR', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: var(--sans);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* ── 앱 레이아웃 ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--bg);
+    }
+
+    /* ── 헤더 ── */
+    .header {
+      height: 56px;
+      background: #0d1a0d;
+      border-bottom: 1px solid #1a3a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 2px;
+    }
+    .zone-badge {
+      background: #1a3a1a;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--green-dark);
+    }
+
+    /* ── 화면 영역 ── */
+    .screens { flex: 1; overflow: hidden; position: relative; }
+    .screen {
+      position: absolute; inset: 0;
+      overflow-y: auto; overflow-x: hidden;
+      padding: 12px;
+      display: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+    .screen.active { display: block; }
+
+    /* ── 하단 네비 ── */
+    .nav {
+      height: 64px;
+      background: #0d1a0d;
+      border-top: 1px solid #1a3a1a;
+      display: flex;
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+    .nav-icon  { font-size: 20px; opacity: 0.4; }
+    .nav-label { font-size: 11px; color: #555; }
+    .nav-btn.active .nav-icon  { opacity: 1; }
+    .nav-btn.active .nav-label { color: var(--green); }
+
+    /* ── 공통 카드 ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    /* ── 공통 버튼 ── */
+    .btn {
+      width: 100%; height: 48px; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 700; color: #fff; cursor: pointer;
+      font-family: var(--sans); margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:active   { transform: scale(0.97); }
+    .btn-green    { background: var(--green-dark); }
+    .btn-blue     { background: var(--blue); }
+    .btn-purple   { background: var(--purple); }
+    .btn-gray     { background: var(--gray); }
+    .btn-red      { background: var(--red); }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--green);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    /* ════════════════════════════
+       대시보드
+    ════════════════════════════ */
+
+    /* 구역 선택 */
+    .zone-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #111; border-radius: 12px; padding: 10px 14px;
+      border: 1px solid #1a3a1a; margin-bottom: 12px;
+    }
+    .zone-btn {
+      background: #1a3a1a; color: var(--green); border: none;
+      border-radius: 8px; padding: 8px 14px; font-size: 13px;
+      font-weight: 700; cursor: pointer; font-family: var(--sans);
+    }
+    .zone-btn:active { transform: scale(0.95); }
+    .zone-num { color: #fff; font-size: 16px; font-weight: 700; text-align: center; }
+    .zone-sub { color: #555; font-size: 11px; font-family: var(--mono); text-align: center; }
+
+    /* 센서 그리드 */
+    .sensor-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 10px;
+    }
+    .sensor-card { border-radius: 10px; padding: 12px; border: 1px solid #1a1a1a; }
+    .s-label { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; margin-bottom: 4px; }
+    .s-value { color: #fff; font-size: 26px; font-weight: 700; font-family: var(--mono); margin-bottom: 4px; }
+    .s-status { font-size: 11px; font-family: var(--mono); }
+    .ok   { color: var(--green); }
+    .warn { color: #ff5722; }
+
+    /* IoT 상태 */
+    .iot-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .iot-item {
+      padding: 4px 10px; border-radius: 20px; font-size: 12px;
+      font-family: var(--mono); font-weight: 700;
+    }
+    .iot-on  { background: #1a3a1a; color: var(--green); }
+    .iot-off { background: #1a1a1a; color: #444; }
+
+    /* 로그 */
+    .log-card { background: #0a1020; border-color: #0d2040; }
+    .log-text { color: #aaa; font-size: 13px; }
+
+    /* 버튼 행 */
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .btn-row .btn { margin-bottom: 0; }
+
+    /* ════════════════════════════
+       그래프 화면
+    ════════════════════════════ */
+    .screen-header {
+      display: flex; align-items: center; gap: 10px;
+      background: #0d1a0d; border-bottom: 1px solid #1a3a1a;
+      margin: -12px -12px 12px; padding: 12px 14px;
+    }
+    .back-btn {
+      background: #1a3a1a; color: var(--green); border: none;
+      border-radius: 8px; padding: 6px 12px; font-size: 13px;
+      font-weight: 700; cursor: pointer; font-family: var(--sans);
+    }
+    .screen-title { flex: 1; font-size: 15px; font-weight: 700; }
+    .screen-zone  { color: var(--green); font-size: 12px; font-family: var(--mono); }
+
+    .chart-card { background: #111; border: 1px solid #1a1a1a; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .chart-title { font-size: 13px; font-weight: 700; }
+    .chart-avg   { font-size: 12px; }
+
+    /* SVG 차트 */
+    .chart-wrap { width: 100%; overflow: hidden; }
+    svg.chart { width: 100%; height: 140px; }
+    .chart-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { opacity: 0.15; }
+    .chart-dot  { r: 3; }
+    .grid-line  { stroke: #1a1a1a; stroke-width: 1; }
+    .axis-label { font-size: 9px; fill: #555; font-family: var(--mono); }
+
+    /* ════════════════════════════
+       제어 패널
+    ════════════════════════════ */
+    .device-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .device-row {
+      background: #111; border: 1px solid #1a1a1a; border-radius: 10px;
+      padding: 12px; display: flex; align-items: center; gap: 10px;
+    }
+    .device-info { flex: 1; }
+    .device-name    { display: block; font-size: 14px; font-weight: 500; }
+    .device-name-en { display: block; color: #555; font-size: 10px; font-family: var(--mono); }
+    .device-state   { font-family: var(--mono); font-size: 12px; font-weight: 700; min-width: 32px; text-align: center; }
+    .device-btns { display: flex; gap: 6px; }
+    .ctrl-btn {
+      padding: 7px 11px; border: none; border-radius: 8px; font-size: 12px;
+      font-weight: 700; cursor: pointer; font-family: var(--sans); opacity: 0.45;
+    }
+    .ctrl-btn:active { transform: scale(0.95); }
+    .ctrl-btn.active { opacity: 1; }
+    .ctrl-on         { background: #1b5e20; color: var(--green); }
+    .ctrl-off        { background: #3e1010; color: #ef5350; }
+    .ctrl-on.active  { background: #2e7d32; color: #fff; }
+    .ctrl-off.active { background: var(--red); color: #fff; }
+    .all-off-btn {
+      width: 100%; height: 48px; background: var(--red); border: none;
+      border-radius: 10px; color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: var(--sans); margin-bottom: 12px;
+    }
+
+    /* 페이드인 */
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.25s ease-out; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="header-title">🌾 SMART FARM</div>
+    <div class="zone-badge" id="zoneBadge">구역 1</div>
+  </div>
+
+  <!-- 화면들 -->
+  <div class="screens">
+
+    <!-- ══ 대시보드 ══ -->
+    <div class="screen active fade-in" id="screen-dash">
+
+      <!-- 구역 선택 -->
+      <div class="zone-row">
+        <button class="zone-btn" onclick="changeZone(-1)">◀ 이전</button>
+        <div>
+          <div class="zone-num" id="zoneNum">구역 1</div>
+          <div class="zone-sub" id="zoneSub">ZONE 1 / 5</div>
+        </div>
+        <button class="zone-btn" onclick="changeZone(+1)">다음 ▶</button>
+      </div>
+
+      <!-- 센서 카드 -->
+      <div class="sensor-grid" id="sensorGrid"></div>
+
+      <!-- IoT 상태 -->
+      <div class="card">
+        <div class="section-label">IOT STATUS</div>
+        <div class="iot-grid" id="iotGrid"></div>
+      </div>
+
+      <!-- 로그 -->
+      <div class="card log-card">
+        <div class="section-label">LOG</div>
+        <div class="log-text" id="logText">스마트 팜 앱이 시작되었습니다.</div>
+      </div>
+
+      <!-- 버튼 -->
+      <div class="btn-row">
+        <button class="btn btn-blue" onclick="refreshData()">🔄 데이터 갱신</button>
+        <button class="btn btn-green" onclick="goScreen('ctrl')">🎛️ IoT 제어</button>
+      </div>
+      <button class="btn btn-purple" onclick="goScreen('graph')">📈 그래프 보기</button>
+    </div>
+
+    <!-- ══ 그래프 ══ -->
+    <div class="screen fade-in" id="screen-graph">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goScreen('dash')">← 뒤로</button>
+        <span class="screen-title">센서 데이터 그래프</span>
+        <span class="screen-zone" id="graphZone">구역 1</span>
+      </div>
+      <div id="chartList"></div>
+    </div>
+
+    <!-- ══ 제어 패널 ══ -->
+    <div class="screen fade-in" id="screen-ctrl">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goScreen('dash')">← 뒤로</button>
+        <span class="screen-title">IoT 제어 패널</span>
+        <span class="screen-zone" id="ctrlZone">구역 1</span>
+      </div>
+      <div class="section-label">기기 제어</div>
+      <div class="device-list" id="deviceList"></div>
+      <button class="all-off-btn" onclick="allOff()">⚠️ 전체 OFF</button>
+      <div class="card log-card">
+        <div class="section-label">LOG</div>
+        <div class="log-text" id="ctrlLog">제어 패널 준비됨</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 하단 네비 -->
+  <div class="nav">
+    <button class="nav-btn active" id="nav-dash" onclick="goScreen('dash')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">홈</span>
+    </button>
+    <button class="nav-btn" id="nav-graph" onclick="goScreen('graph')">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">그래프</span>
+    </button>
+    <button class="nav-btn" id="nav-ctrl" onclick="goScreen('ctrl')">
+      <span class="nav-icon">🎛️</span>
+      <span class="nav-label">제어</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// 데이터 설정
+// ════════════════════════════════════════════════════
+
+const SENSOR_DATA = {
+  1: { temperature:24.5, humidity:68.0, light:3200, co2:412 },
+  2: { temperature:22.1, humidity:72.3, light:4200, co2:380 },
+  3: { temperature:26.2, humidity:65.0, light:5000, co2:450 },
+  4: { temperature:23.8, humidity:69.5, light:3800, co2:425 },
+  5: { temperature:21.5, humidity:74.0, light:2800, co2:395 },
+};
+
+const IOT_DATA = {
+  1: { fan:true,  led:true,  water:false, heater:false, window:false },
+  2: { fan:true,  led:false, water:false, heater:false, window:false },
+  3: { fan:false, led:true,  water:true,  heater:false, window:false },
+  4: { fan:true,  led:true,  water:false, heater:false, window:true  },
+  5: { fan:false, led:false, water:false, heater:true,  window:false },
+};
+
+const RANGES = {
+  temperature: { min:18,   max:28,   unit:'°C',  label:'온도',  color:'#4caf50', bg:'#0a1f0a', tag:'TEMP'  },
+  humidity:    { min:60,   max:80,   unit:'%',   label:'습도',  color:'#2196f3', bg:'#0a1520', tag:'HUMID' },
+  light:       { min:3000, max:8000, unit:' lux',label:'조도',  color:'#ffc107', bg:'#1a1500', tag:'LIGHT' },
+  co2:         { min:300,  max:600,  unit:' ppm',label:'CO₂',  color:'#e91e63', bg:'#1a0a10', tag:'CO2'   },
+};
+
+const DEVICES = [
+  { key:'fan',    name:'환풍기',      en:'FAN',    on:'팬 켜',     off:'팬 꺼'     },
+  { key:'water',  name:'관수 시스템', en:'WATER',  on:'물 줘',     off:'물 꺼'     },
+  { key:'led',    name:'LED 조명',    en:'LED',    on:'조명 켜',   off:'조명 꺼'   },
+  { key:'heater', name:'히터',        en:'HEATER', on:'히터 켜',   off:'히터 꺼'   },
+  { key:'window', name:'창문 개폐',   en:'WINDOW', on:'창문 열어', off:'창문 닫아' },
+];
+
+const DEVICE_NAMES = { fan:'환풍기', led:'LED 조명', water:'관수 시스템', heater:'히터', window:'창문' };
+
+// ════════════════════════════════════════════════════
+// 상태 관리
+// ════════════════════════════════════════════════════
+
+let zone    = 1;
+let sensors = JSON.parse(JSON.stringify(SENSOR_DATA));
+let iot     = JSON.parse(JSON.stringify(IOT_DATA));
+let history = {};
+
+// 초기 히스토리 생성
+for (let z = 1; z <= 5; z++) history[z] = generateHistory(z);
+
+function generateHistory(z) {
+  const base = SENSOR_DATA[z];
+  return Array.from({ length: 10 }, (_, i) => ({
+    time: `${i+1}회`,
+    temperature: +(base.temperature + (Math.random()-0.5)*4).toFixed(1),
+    humidity:    +(base.humidity    + (Math.random()-0.5)*8).toFixed(1),
+    light:       Math.floor(base.light + (Math.random()-0.5)*1000),
+    co2:         Math.floor(base.co2   + (Math.random()-0.5)*80),
+  }));
+}
+
+function simulateChange(s) {
+  return {
+    temperature: Math.max(10, Math.min(40, s.temperature + (Math.random()-0.5)*2)),
+    humidity:    Math.max(20, Math.min(100, s.humidity   + (Math.random()-0.5)*5)),
+    light:       Math.max(0,  Math.min(10000, s.light    + Math.floor((Math.random()-0.5)*500))),
+    co2:         Math.max(300,Math.min(1000,  s.co2      + Math.floor((Math.random()-0.5)*50))),
+  };
+}
+
+// ════════════════════════════════════════════════════
+// UI 렌더링
+// ════════════════════════════════════════════════════
+
+function formatVal(key, val) {
+  if (key === 'temperature') return val.toFixed(1) + '°C';
+  if (key === 'humidity')    return Math.round(val) + '%';
+  if (key === 'light')       return val.toLocaleString() + ' lux';
+  return val + ' ppm';
+}
+
+function renderSensors() {
+  const s = sensors[zone];
+  document.getElementById('sensorGrid').innerHTML =
+    Object.keys(RANGES).map(key => {
+      const r    = RANGES[key];
+      const isOk = s[key] >= r.min && s[key] <= r.max;
+      return `
+        <div class="sensor-card" style="background:${r.bg}">
+          <div class="s-label" style="color:${r.color}">${r.tag}</div>
+          <div class="s-value">${formatVal(key, s[key])}</div>
+          <div class="s-status ${isOk?'ok':'warn'}">
+            ${isOk ? 'OK' : '!!'}&nbsp;&nbsp;${r.min}~${r.max}
+          </div>
+        </div>`;
+    }).join('');
+}
+
+function renderIot() {
+  const io = iot[zone];
+  document.getElementById('iotGrid').innerHTML =
+    DEVICES.map(d => `
+      <div class="iot-item ${io[d.key]?'iot-on':'iot-off'}">
+        ${d.en}&nbsp;${io[d.key]?'ON':'OFF'}
+      </div>`).join('');
+}
+
+function renderDevices() {
+  const io = iot[zone];
+  document.getElementById('deviceList').innerHTML =
+    DEVICES.map(d => `
+      <div class="device-row">
+        <div class="device-info">
+          <span class="device-name">${d.name}</span>
+          <span class="device-name-en">${d.en}</span>
+        </div>
+        <div class="device-state ${io[d.key]?'ok':'warn'}">
+          ${io[d.key]?'ON':'OFF'}
+        </div>
+        <div class="device-btns">
+          <button class="ctrl-btn ctrl-on ${io[d.key]?'active':''}"
+            onclick="controlDevice('${d.key}', true)">${d.on}</button>
+          <button class="ctrl-btn ctrl-off ${!io[d.key]?'active':''}"
+            onclick="controlDevice('${d.key}', false)">${d.off}</button>
+        </div>
+      </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// 차트 (순수 SVG)
+// ════════════════════════════════════════════════════
+
+function renderCharts() {
+  const hist = history[zone];
+  document.getElementById('chartList').innerHTML =
+    Object.keys(RANGES).map(key => {
+      const r   = RANGES[key];
+      const avg = (hist.reduce((s,d)=>s+d[key],0)/hist.length).toFixed(1);
+      return `
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title" style="color:${r.color}">${r.label} 변화</span>
+            <span class="chart-avg" style="color:${r.color}">평균: ${avg}${r.unit}</span>
+          </div>
+          <div class="chart-wrap">${buildSVG(hist, key, r.color)}</div>
+        </div>`;
+    }).join('');
+}
+
+function buildSVG(data, key, color) {
+  const W = 340, H = 120, PL = 10, PR = 10, PT = 10, PB = 24;
+  const vals   = data.map(d => d[key]);
+  const minV   = Math.min(...vals);
+  const maxV   = Math.max(...vals);
+  const range  = maxV - minV || 1;
+  const iW     = W - PL - PR;
+  const iH     = H - PT - PB;
+
+  const px = (i) => PL + (i / (data.length-1)) * iW;
+  const py = (v) => PT + iH - ((v - minV) / range) * iH;
+
+  const pts   = data.map((d,i) => `${px(i)},${py(d[key])}`).join(' ');
+  const first = `${px(0)},${py(data[0][key])}`;
+  const last  = `${px(data.length-1)},${py(data[data.length-1][key])}`;
+
+  const dots = data.map((d,i) =>
+    `<circle cx="${px(i)}" cy="${py(d[key])}" r="3" fill="${color}"/>`).join('');
+
+  const labels = data.map((d,i) =>
+    `<text x="${px(i)}" y="${H-6}" text-anchor="middle" class="axis-label">${d.time}</text>`).join('');
+
+  return `
+    <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" class="grid-line"/>
+      <line x1="${PL}" y1="${H-PB}" x2="${W-PR}" y2="${H-PB}" class="grid-line"/>
+      <polygon points="${first} ${pts} ${last} ${PL+iW},${H-PB} ${PL},${H-PB}"
+        fill="${color}" class="chart-area"/>
+      <polyline points="${pts}" class="chart-line" stroke="${color}"/>
+      ${dots}
+      ${labels}
+    </svg>`;
+}
+
+// ════════════════════════════════════════════════════
+// 이벤트 핸들러
+// ════════════════════════════════════════════════════
+
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+
+  if (id === 'graph') { renderCharts(); document.getElementById('graphZone').textContent = '구역 ' + zone; }
+  if (id === 'ctrl')  { renderDevices(); document.getElementById('ctrlZone').textContent = '구역 ' + zone; }
+}
+
+function changeZone(delta) {
+  zone = Math.max(1, Math.min(5, zone + delta));
+  document.getElementById('zoneBadge').textContent = '구역 ' + zone;
+  document.getElementById('zoneNum').textContent   = '구역 ' + zone;
+  document.getElementById('zoneSub').textContent   = 'ZONE ' + zone + ' / 5';
+  history[zone] = generateHistory(zone);
+  renderAll();
+  setLog('구역 ' + zone + ' 데이터를 불러왔습니다.');
+}
+
+function refreshData() {
+  sensors[zone] = simulateChange(sensors[zone]);
+  history[zone] = generateHistory(zone);
+  renderAll();
+  setLog('데이터를 갱신했습니다.');
+}
+
+function controlDevice(key, state) {
+  iot[zone][key] = state;
+  renderIot();
+  renderDevices();
+  const msg = DEVICE_NAMES[key] + ' ' + (state ? 'ON' : 'OFF') + ' 완료';
+  setLog(msg);
+  document.getElementById('ctrlLog').textContent = msg;
+}
+
+function allOff() {
+  DEVICES.forEach(d => { iot[zone][d.key] = false; });
+  renderIot();
+  renderDevices();
+  setLog('전체 기기를 OFF 했습니다.');
+  document.getElementById('ctrlLog').textContent = '전체 기기 OFF 완료';
+}
+
+function setLog(msg) {
+  document.getElementById('logText').textContent = msg;
+}
+
+function renderAll() {
+  renderSensors();
+  renderIot();
+}
+
+// ════════════════════════════════════════════════════
+// 초기화 & 자동 갱신
+// ════════════════════════════════════════════════════
+
+renderAll();
+
+// 5초마다 자동 갱신
+setInterval(() => {
+  sensors[zone] = simulateChange(sensors[zone]);
+  renderSensors();
+}, 5000);
+</script>
+</body>
+</html>
