@@ -1,1 +1,894 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="밸리모니터" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>혁신밸리 모니터</title>
+  <link rel="manifest" href="./manifest.json" />
+  <!-- Apple Touch Icon (PWA 홈화면 아이콘) -->
+  <link rel="apple-touch-icon" href="./icon-192.png" />
 
+  <style>
+    /* ── 폰트 ─────────────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+    /* ── CSS 변수 ──────────────────────────────── */
+    :root {
+      --bg:        #0a0a0a;
+      --bg2:       #111111;
+      --bg3:       #1a1a1a;
+      --border:    #2a2a2a;
+      --text:      #f0f0f0;
+      --text2:     #888;
+      --text3:     #555;
+      --accent:    #00d4ff;
+      --orange:    #ff8c42;
+      --red:       #ff4757;
+      --green:     #2ed573;
+      --yellow:    #ffd32a;
+      --purple:    #a29bfe;
+      --warn:      #ffa502;
+      --mono:      'Share Tech Mono', monospace;
+      --sans:      'Noto Sans KR', sans-serif;
+      --radius:    10px;
+      --safe-top:  env(safe-area-inset-top, 0px);
+      --safe-bot:  env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ── 리셋 ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    /* ── 앱 레이아웃 ────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bot);
+    }
+
+    /* ── 헤더 ──────────────────────────────────── */
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .header-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+    .header-sub {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 300;
+    }
+    .update-time {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* 구역 선택 */
+    .area-select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    /* 갱신 버튼 */
+    .btn-refresh {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .btn-refresh:active { background: var(--bg3); }
+    .btn-refresh.spin { animation: spin 0.6s linear; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 탭 네비게이션 ──────────────────────────── */
+    nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── 컨텐츠 영역 ────────────────────────────── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px;
+    }
+
+    /* 탭 패널 */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── 로딩 / 에러 ────────────────────────────── */
+    .status-bar {
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+    }
+    .status-bar.loading { color: var(--accent); background: rgba(0,212,255,0.08); }
+    .status-bar.error   { color: var(--red);   background: rgba(255,71,87,0.08); }
+    .status-bar.hidden  { display: none; }
+
+    /* ── 섹션 타이틀 ────────────────────────────── */
+    .sec-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 14px 0 6px;
+    }
+
+    /* ── 카드 그리드 ────────────────────────────── */
+    .card-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .card-grid-2 { grid-template-columns: 1fr 1fr; }
+    .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+    /* ── 메트릭 카드 ────────────────────────────── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .card-label {
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+    .card-value {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    .card-value.big  { font-size: 28px; }
+    .card-value.med  { font-size: 18px; }
+    .card-value.sml  { font-size: 15px; }
+    .card-sub {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 3px;
+    }
+
+    /* 색상 유틸 */
+    .c-accent  { color: var(--accent); }
+    .c-orange  { color: var(--orange); }
+    .c-red     { color: var(--red); }
+    .c-green   { color: var(--green); }
+    .c-yellow  { color: var(--yellow); }
+    .c-purple  { color: var(--purple); }
+    .c-warn    { color: var(--warn); }
+    .c-dim     { color: var(--text2); }
+
+    /* ── 상태 배지 ──────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-ok   { background: rgba(46,213,115,0.15); color: var(--green); }
+    .badge-warn { background: rgba(255,165,2,0.15);  color: var(--warn); }
+    .badge-err  { background: rgba(255,71,87,0.15);  color: var(--red); }
+    .badge-off  { background: rgba(255,255,255,0.05); color: var(--text3); }
+
+    /* ── 장치 상태 행 ────────────────────────────── */
+    .device-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 5px;
+    }
+    .device-name {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .device-meta {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+    .device-right { text-align: right; }
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .dot-on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot-off { background: var(--text3); }
+
+    /* ── 존 테이블 ──────────────────────────────── */
+    .zone-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .zone-table th {
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 10px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .zone-table td {
+      padding: 8px 10px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .zone-table tr:last-child td { border-bottom: none; }
+    .zone-table td:first-child {
+      color: var(--text2);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* ── 창/커튼 그리드 ─────────────────────────── */
+    .window-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .window-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .window-card .wc-label {
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+    .window-card .wc-val {
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--accent);
+    }
+    .window-card .wc-sub {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ── 가로모드 레이아웃 ──────────────────────── */
+    @media (orientation: landscape) and (max-height: 500px) {
+      header { padding: 6px 14px; }
+      .header-title { font-size: 13px; }
+      main { padding: 8px 12px; }
+      .card-value.big { font-size: 22px; }
+      .sec-title { margin: 8px 0 4px; }
+    }
+
+    /* ── 큰 화면 (태블릿/데스크탑) ─────────────── */
+    @media (min-width: 600px) {
+      main { max-width: 800px; margin: 0 auto; padding: 16px; }
+      .card-grid-2 { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* ── 애니메이션 ─────────────────────────────── */
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── 연결상태 인디케이터 ────────────────────── */
+    .conn-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+    .conn-on  { background: var(--green); animation: pulse 2s infinite; }
+    .conn-off { background: var(--red); }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 헤더 -->
+  <header>
+    <div>
+      <div class="header-title">
+        <span class="conn-dot conn-off" id="connDot"></span>혁신밸리 모니터
+      </div>
+      <div class="header-sub">밀양스마트밸리6</div>
+    </div>
+
+    <select class="area-select" id="areaSelect">
+      <option value="1">1동</option>
+      <option value="2">2동</option>
+      <option value="3">3동</option>
+      <option value="4">4동</option>
+      <option value="5">5동</option>
+      <option value="6">6동</option>
+    </select>
+
+    <span class="update-time" id="updateTime">--:--</span>
+
+    <button class="btn-refresh" id="btnRefresh" title="새로고침">↻</button>
+  </header>
+
+  <!-- 탭 -->
+  <nav>
+    <button class="tab-btn active" data-tab="dashboard">대시보드</button>
+    <button class="tab-btn" data-tab="environment">환경</button>
+    <button class="tab-btn" data-tab="device">장치</button>
+  </nav>
+
+  <!-- 컨텐츠 -->
+  <main>
+    <div id="statusBar" class="status-bar loading">데이터 로딩 중...</div>
+
+    <!-- ① 대시보드 탭 -->
+    <div id="panel-dashboard" class="panel active">
+
+      <div class="sec-title">외부 환경</div>
+      <div class="card-grid card-grid-4">
+        <div class="card">
+          <div class="card-label">외부온도</div>
+          <div class="card-value big c-orange" id="d-outtemp">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">풍속 / 풍향</div>
+          <div class="card-value med" id="d-wind">--</div>
+          <div class="card-sub" id="d-winddir">--</div>
+        </div>
+        <div class="card">
+          <div class="card-label">일사량</div>
+          <div class="card-value med c-yellow" id="d-sun">--</div>
+          <div class="card-sub">W/m²</div>
+        </div>
+        <div class="card">
+          <div class="card-label">감우</div>
+          <div class="card-value med" id="d-rain">--</div>
+          <div class="card-sub" id="d-daynight">--</div>
+        </div>
+      </div>
+
+      <div class="sec-title">내부 환경 (평균)</div>
+      <div class="card-grid card-grid-2" style="margin-bottom:8px">
+        <div class="card">
+          <div class="card-label">평균 내부온도</div>
+          <div class="card-value big c-orange" id="d-avgtemp">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">평균 내부습도</div>
+          <div class="card-value big c-accent" id="d-avghum">--</div>
+          <div class="card-sub">%</div>
+        </div>
+      </div>
+      <div class="card-grid card-grid-2">
+        <div class="card">
+          <div class="card-label">CO2 농도</div>
+          <div class="card-value med" id="d-co2">--</div>
+          <div class="card-sub"><span id="d-co2status">--</span></div>
+        </div>
+        <div class="card">
+          <div class="card-label">상대습도 / 이슬점</div>
+          <div class="card-value sml" id="d-relhum">--</div>
+          <div class="card-sub" id="d-dew">이슬점: --</div>
+        </div>
+      </div>
+
+      <div class="sec-title">공급 / 회수 온도</div>
+      <div class="card-grid card-grid-4">
+        <div class="card">
+          <div class="card-label">공급온도1</div>
+          <div class="card-value med c-red" id="d-sup1">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">공급온도2</div>
+          <div class="card-value med c-red" id="d-sup2">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">회수온도1</div>
+          <div class="card-value med c-accent" id="d-ret1">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">회수온도2</div>
+          <div class="card-value med c-accent" id="d-ret2">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+      </div>
+
+      <div class="sec-title">장치 요약</div>
+      <div id="d-devices"></div>
+
+    </div><!-- /dashboard -->
+
+    <!-- ② 환경 탭 -->
+    <div id="panel-environment" class="panel">
+
+      <div class="sec-title">존별 내부온도 / 습도 / 설정온도</div>
+      <div style="overflow-x:auto">
+        <table class="zone-table" id="zoneTable">
+          <thead>
+            <tr>
+              <th>존</th>
+              <th class="c-orange">온도(°C)</th>
+              <th class="c-accent">습도(%)</th>
+              <th class="c-green">환기설정</th>
+              <th class="c-red">난방설정</th>
+            </tr>
+          </thead>
+          <tbody id="zoneBody"></tbody>
+        </table>
+      </div>
+
+      <div class="sec-title">습도 상세</div>
+      <div class="card-grid card-grid-2">
+        <div class="card">
+          <div class="card-label">상대습도</div>
+          <div class="card-value med" id="e-relhum">--</div>
+          <div class="card-sub">%</div>
+        </div>
+        <div class="card">
+          <div class="card-label">절대습도</div>
+          <div class="card-value med" id="e-abhum">--</div>
+          <div class="card-sub">g/m³</div>
+        </div>
+        <div class="card">
+          <div class="card-label">이슬점</div>
+          <div class="card-value med" id="e-dew">--</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">수분부족분</div>
+          <div class="card-value med" id="e-humlack">--</div>
+          <div class="card-sub">g/m³</div>
+        </div>
+      </div>
+
+      <div class="sec-title">토양 / 순환온도 / 일사량</div>
+      <div class="card-grid card-grid-3">
+        <div class="card">
+          <div class="card-label">지온 / 지습</div>
+          <div class="card-value sml" id="e-gnd">-- / --%</div>
+        </div>
+        <div class="card">
+          <div class="card-label">외부일사</div>
+          <div class="card-value med c-yellow" id="e-sun">--</div>
+          <div class="card-sub">W/m²</div>
+        </div>
+        <div class="card">
+          <div class="card-label">내부일사</div>
+          <div class="card-value med c-yellow" id="e-insun">--</div>
+          <div class="card-sub">W/m²</div>
+        </div>
+        <div class="card">
+          <div class="card-label">공급온도1/2</div>
+          <div class="card-value sml c-red" id="e-sup">-- / --</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">회수온도1/2</div>
+          <div class="card-value sml c-accent" id="e-ret">-- / --</div>
+          <div class="card-sub">°C</div>
+        </div>
+        <div class="card">
+          <div class="card-label">EC / pH</div>
+          <div class="card-value sml c-green" id="e-ecph">-- / --</div>
+        </div>
+      </div>
+
+    </div><!-- /environment -->
+
+    <!-- ③ 장치 탭 -->
+    <div id="panel-device" class="panel">
+
+      <div class="sec-title">창 개도 상태 (6창)</div>
+      <div class="window-grid" id="windowGrid"></div>
+
+      <div class="sec-title">커튼 개도 (5개)</div>
+      <div class="window-grid" id="curtainGrid"></div>
+
+      <div class="sec-title">3Way 밸브 / 단독 장치</div>
+      <div id="deviceList"></div>
+
+      <div class="sec-title">보조기기 (6개)</div>
+      <div id="assList"></div>
+
+      <div class="sec-title">냉난방기 (5개)</div>
+      <div id="hcList"></div>
+
+    </div><!-- /device -->
+
+  </main>
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════════
+//  설정
+// ══════════════════════════════════════════════
+const API_BASE   = 'https://api.gcsmagma.com/gcs_my_api.php/Get_GCS_Data';
+const REGION     = 'mysb6';
+const REFRESH_MS = 30000;
+
+// ── 상태 ──────────────────────────────────────
+let currentArea  = parseInt(localStorage.getItem('gcs_area') || '1');
+let refreshTimer = null;
+let lastData     = null;
+
+// ══════════════════════════════════════════════
+//  DOM
+// ══════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const areaSelect  = $('areaSelect');
+const btnRefresh  = $('btnRefresh');
+const updateTime  = $('updateTime');
+const statusBar   = $('statusBar');
+const connDot     = $('connDot');
+
+// ══════════════════════════════════════════════
+//  탭
+// ══════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════════
+//  유틸
+// ══════════════════════════════════════════════
+const pf  = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+const f1  = v => { const n = pf(v); return n === 0 ? '--' : n.toFixed(1); };
+const f0  = v => { const n = pf(v); return n === 0 ? '--' : Math.round(n).toString(); };
+const fOpen = v => {
+  const n = parseInt(v) || 0;
+  if (n <= 0)   return '닫힘';
+  if (n >= 100) return '전개';
+  return n + '%';
+};
+const isAuto = v => v === '자동';
+const isRun  = v => v === '1' || v === 1;
+const windDir = deg => {
+  const d = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return d[Math.round(pf(deg) / 22.5) % 16];
+};
+const co2Status = ppm => {
+  if (ppm <= 0)   return { label: '측정없음', cls: 'badge-off' };
+  if (ppm < 1000) return { label: '양호',    cls: 'badge-ok' };
+  if (ppm < 2000) return { label: '주의',    cls: 'badge-warn' };
+  return              { label: '위험',       cls: 'badge-err' };
+};
+const avg = arr => {
+  const valid = arr.filter(v => v !== 0);
+  return valid.length ? valid.reduce((a,b) => a+b, 0) / valid.length : 0;
+};
+const timeStr = dateObj => {
+  if (!dateObj || !dateObj.date) return '--:--';
+  return dateObj.date.substring(11, 16);
+};
+
+// ══════════════════════════════════════════════
+//  API 호출
+// ══════════════════════════════════════════════
+async function fetchData(area) {
+  const url = `${API_BASE}/${REGION}/${area}`;
+  const res = await fetch(url, { mode: 'cors' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ══════════════════════════════════════════════
+//  UI 업데이트
+// ══════════════════════════════════════════════
+function updateUI(data) {
+  if (!data || !data.fields || !data.fields.length) return;
+  const f = data.fields[0];
+
+  // 연결 상태
+  connDot.className = 'conn-dot conn-on';
+  updateTime.textContent = timeStr(f.save_dt);
+
+  // ── 대시보드 ────────────────────────────────
+  $('d-outtemp').textContent  = f1(f.xouttemp);
+  $('d-wind').textContent     = f1(f.xwindsp) + ' m/s';
+  $('d-winddir').textContent  = windDir(f.xwinddirec);
+  $('d-sun').textContent      = f0(f.xsunvol);
+
+  const rain = f.xrain != null && String(f.xrain) !== '0';
+  $('d-rain').textContent     = rain ? '⚠ 감우' : '건조';
+  $('d-rain').className       = 'card-value med ' + (rain ? 'c-warn' : 'c-green');
+  $('d-daynight').textContent = f.xjuya === '1' ? '🌙 야간' : '☀ 주간';
+
+  const inTemps = [pf(f.xintemp1),pf(f.xintemp2),pf(f.xintemp3),pf(f.xintemp4),pf(f.xintemp5)];
+  const inHums  = [pf(f.xinhum1), pf(f.xinhum2), pf(f.xinhum3), pf(f.xinhum4), pf(f.xinhum5)];
+  $('d-avgtemp').textContent = avg(inTemps).toFixed(1);
+  $('d-avghum').textContent  = avg(inHums).toFixed(1);
+
+  const co2ppm = pf(f.xco2);
+  const co2s   = co2Status(co2ppm);
+  $('d-co2').textContent    = f0(f.xco2) + ' ppm';
+  $('d-co2').className      = 'card-value med ' + (co2ppm >= 2000 ? 'c-red' : co2ppm >= 1000 ? 'c-warn' : '');
+  $('d-co2status').innerHTML = `<span class="badge ${co2s.cls}">${co2s.label}</span>`;
+
+  $('d-relhum').textContent = f1(f.xsthum) + '%';
+  $('d-dew').textContent    = '이슬점: ' + f1(f.xdhum) + '°C';
+  $('d-sup1').textContent   = f1(f.Xsupplytemp1);
+  $('d-sup2').textContent   = f1(f.Xsupplytemp2);
+  $('d-ret1').textContent   = f1(f.Xreturntemp1);
+  $('d-ret2').textContent   = f1(f.Xreturntemp2);
+
+  // 장치 요약
+  const devSummary = [
+    { name: '보일러',  run: isRun(f.xborun),    auto: false },
+    { name: '순환펌프', run: isRun(f.xpumprun),  auto: false },
+    { name: '보광등',  run: isRun(f.xlightrun),  auto: isAuto(f.xlightauto) },
+    { name: '훈증기',  run: isRun(f.xhunrun),    auto: isAuto(f.xhunauto) },
+    { name: 'CO2',    run: isRun(f.xco2run),     auto: isAuto(f.xco2auto) },
+  ];
+  $('d-devices').innerHTML = devSummary.map(d => `
+    <div class="device-row">
+      <div>
+        <div class="device-name">
+          <span class="dot ${d.run ? 'dot-on' : 'dot-off'}"></span>${d.name}
+        </div>
+      </div>
+      <div class="device-right">
+        <span class="badge ${d.run ? 'badge-ok' : 'badge-off'}">${d.run ? '가동' : '정지'}</span>
+        ${d.auto !== false ? `<span class="badge ${d.auto ? 'badge-ok' : 'badge-off'}" style="margin-left:4px">${d.auto ? '자동' : '수동'}</span>` : ''}
+      </div>
+    </div>`).join('');
+
+  // ── 환경 탭 ─────────────────────────────────
+  const ventTemps = [pf(f.xventtemp1),pf(f.xventtemp2),pf(f.xventtemp3),pf(f.xventtemp4),pf(f.xventtemp5)];
+  const heatTemps = [pf(f.xheattemp1),pf(f.xheattemp2),pf(f.xheattemp3),pf(f.xheattemp4),pf(f.xheattemp5)];
+
+  $('zoneBody').innerHTML = [1,2,3,4,5].map((z,i) => `
+    <tr>
+      <td>${z}존</td>
+      <td class="c-orange">${inTemps[i] ? inTemps[i].toFixed(1) : '--'}</td>
+      <td class="c-accent">${inHums[i]  ? inHums[i].toFixed(1)  : '--'}</td>
+      <td class="c-green">${ventTemps[i] ? ventTemps[i].toFixed(1) : '--'}</td>
+      <td class="c-red">${heatTemps[i]   ? heatTemps[i].toFixed(1)  : '--'}</td>
+    </tr>`).join('');
+
+  $('e-relhum').textContent  = f1(f.xsthum);
+  $('e-abhum').textContent   = f1(f.xabhum);
+  $('e-dew').textContent     = f1(f.xdhum);
+  $('e-humlack').textContent = f1(f.xhumlack);
+  $('e-gnd').textContent     = f1(f.xgndtemp) + '°C / ' + f1(f.xgndhum) + '%';
+  $('e-sun').textContent     = f0(f.xsunvol);
+  $('e-insun').textContent   = f0(f.xinsunvol);
+  $('e-sup').textContent     = f1(f.Xsupplytemp1) + ' / ' + f1(f.Xsupplytemp2);
+  $('e-ret').textContent     = f1(f.Xreturntemp1) + ' / ' + f1(f.Xreturntemp2);
+  $('e-ecph').textContent    = f1(f.xec) + ' / ' + f1(f.xph);
+
+  // ── 장치 탭 ─────────────────────────────────
+  // 창 (6창 × 좌/우)
+  const winKeys = [[f.xwinvol1_1,f.xwinvol1_2,f.xwin1auto],[f.xwinvol2_1,f.xwinvol2_2,f.xwin2auto],
+                   [f.xwinvol3_1,f.xwinvol3_2,f.xwin3auto],[f.xwinvol4_1,f.xwinvol4_2,f.xwin4auto],
+                   [f.xwinvol5_1,f.xwinvol5_2,f.xwin5auto],[f.xwinvol6_1,f.xwinvol6_2,f.xwin6auto]];
+  $('windowGrid').innerHTML = winKeys.map((w,i) => `
+    <div class="window-card">
+      <div class="wc-label">창${i+1}</div>
+      <div class="wc-val">${fOpen(w[0])}</div>
+      <div class="wc-sub">우: ${fOpen(w[1])} | ${isAuto(w[2]) ? '자동' : '수동'}</div>
+    </div>`).join('');
+
+  // 커튼 (5개)
+  const curKeys = [[f.xcur1vol,f.xcur1auto],[f.xcur2vol,f.xcur2auto],[f.xcur3vol,f.xcur3auto],
+                   [f.xcur4vol,f.xcur4auto],[f.xcur5vol,f.xcur5auto]];
+  $('curtainGrid').innerHTML = curKeys.map((c,i) => `
+    <div class="window-card">
+      <div class="wc-label">커튼${i+1}</div>
+      <div class="wc-val">${fOpen(c[0])}</div>
+      <div class="wc-sub">${isAuto(c[1]) ? '자동' : '수동'}</div>
+    </div>`).join('');
+
+  // 단독 장치
+  const singles = [
+    { name:'3Way밸브1', val:fOpen(f.x3way1vol), auto:isAuto(f.x3way1auto), run:null },
+    { name:'3Way밸브2', val:fOpen(f.x3way2vol), auto:isAuto(f.x3way2auto), run:null },
+    { name:'보일러',    val:'',  auto:false, run:isRun(f.xborun) },
+    { name:'펌프1',     val:'',  auto:false, run:isRun(f.xpumprun1) },
+    { name:'펌프2',     val:'',  auto:false, run:isRun(f.xpumprun2) },
+    { name:'보광등',    val:'',  auto:isAuto(f.xlightauto), run:isRun(f.xlightrun) },
+    { name:'훈증기',    val:'',  auto:isAuto(f.xhunauto),  run:isRun(f.xhunrun) },
+    { name:'CO2',      val:'',  auto:isAuto(f.xco2auto),  run:isRun(f.xco2run) },
+  ];
+  $('deviceList').innerHTML = singles.map(d => `
+    <div class="device-row">
+      <div>
+        <div class="device-name">
+          ${d.run !== null ? `<span class="dot ${d.run ? 'dot-on' : 'dot-off'}"></span>` : ''}${d.name}
+          ${d.val ? `<span style="color:var(--accent);font-family:var(--mono);margin-left:6px">${d.val}</span>` : ''}
+        </div>
+      </div>
+      <div class="device-right">
+        ${d.run !== null ? `<span class="badge ${d.run ? 'badge-ok' : 'badge-off'}">${d.run ? '가동' : '정지'}</span>` : ''}
+        <span class="badge ${d.auto ? 'badge-ok' : 'badge-off'}" style="margin-left:4px">${d.auto ? '자동' : '수동'}</span>
+      </div>
+    </div>`).join('');
+
+  // 보조기기
+  const assRuns  = [f.xass1run,f.xass2run,f.xass3run,f.xass4run,f.xass5run,f.xass6run];
+  const assAutos = [f.xass1auto,f.xass2auto,f.xass3auto,f.xass4auto,f.xass5auto,f.xass6auto];
+  $('assList').innerHTML = assRuns.map((r,i) => `
+    <div class="device-row">
+      <div class="device-name">
+        <span class="dot ${isRun(r) ? 'dot-on' : 'dot-off'}"></span>보조기기${i+1}
+      </div>
+      <div class="device-right">
+        <span class="badge ${isRun(r) ? 'badge-ok' : 'badge-off'}">${isRun(r) ? '가동' : '정지'}</span>
+        <span class="badge ${isAuto(assAutos[i]) ? 'badge-ok' : 'badge-off'}" style="margin-left:4px">${isAuto(assAutos[i]) ? '자동' : '수동'}</span>
+      </div>
+    </div>`).join('');
+
+  // 냉난방기
+  const hcRuns  = [f.XheatandCool1Run,f.XheatandCool2Run,f.XheatandCool3Run,f.XheatandCool4Run,f.XheatandCool5Run];
+  const hcAutos = [f.XheatandCool1Auto,f.XheatandCool2Auto,f.XheatandCool3Auto,f.XheatandCool4Auto,f.XheatandCool5Auto];
+  $('hcList').innerHTML = hcRuns.map((r,i) => `
+    <div class="device-row">
+      <div class="device-name">
+        <span class="dot ${isRun(r) ? 'dot-on' : 'dot-off'}"></span>냉난방기${i+1}
+      </div>
+      <div class="device-right">
+        <span class="badge ${isRun(r) ? 'badge-ok' : 'badge-off'}">${isRun(r) ? '가동' : '정지'}</span>
+        <span class="badge ${isAuto(hcAutos[i]) ? 'badge-ok' : 'badge-off'}" style="margin-left:4px">${isAuto(hcAutos[i]) ? '자동' : '수동'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  데이터 로드
+// ══════════════════════════════════════════════
+async function loadData() {
+  statusBar.className   = 'status-bar loading';
+  statusBar.textContent = currentArea + '동 데이터 로딩 중...';
+
+  try {
+    const data = await fetchData(currentArea);
+    lastData = data;
+    statusBar.className = 'status-bar hidden';
+    updateUI(data);
+  } catch(e) {
+    connDot.className     = 'conn-dot conn-off';
+    statusBar.className   = 'status-bar error';
+    statusBar.textContent = '⚠ 네트워크 오류 – 잠시 후 재시도합니다';
+    console.error(e);
+  }
+}
+
+function startAutoRefresh() {
+  clearInterval(refreshTimer);
+  loadData();
+  refreshTimer = setInterval(loadData, REFRESH_MS);
+}
+
+// ══════════════════════════════════════════════
+//  이벤트
+// ══════════════════════════════════════════════
+areaSelect.value = currentArea;
+areaSelect.addEventListener('change', () => {
+  currentArea = parseInt(areaSelect.value);
+  localStorage.setItem('gcs_area', currentArea);
+  startAutoRefresh();
+});
+
+btnRefresh.addEventListener('click', () => {
+  btnRefresh.classList.add('spin');
+  setTimeout(() => btnRefresh.classList.remove('spin'), 600);
+  startAutoRefresh();
+});
+
+// 화면 활성화 시 갱신
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') startAutoRefresh();
+  else clearInterval(refreshTimer);
+});
+
+// ══════════════════════════════════════════════
+//  PWA Service Worker 등록
+// ══════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+}
+
+// ══════════════════════════════════════════════
+//  시작
+// ══════════════════════════════════════════════
+startAutoRefresh();
+</script>
+</body>
+</html>
