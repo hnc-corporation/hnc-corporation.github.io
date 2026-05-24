@@ -595,7 +595,8 @@
 // ══════════════════════════════════════════════
 //  설정
 // ══════════════════════════════════════════════
-const API_BASE   = 'https://api.gcsmagma.com/gcs_my_api.php/Get_GCS_Data';
+// Cloudflare Workers 프록시 (CORS 우회)
+const PROXY_URL  = 'https://gcs-proxy.hsyoon.workers.dev';
 const REGION     = 'mysb6';
 const REFRESH_MS = 30000;
 
@@ -663,8 +664,8 @@ const timeStr = dateObj => {
 //  API 호출
 // ══════════════════════════════════════════════
 async function fetchData(area) {
-  const url = `${API_BASE}/${REGION}/${area}`;
-  const res = await fetch(url, { mode: 'cors' });
+  const url = `${PROXY_URL}?region=${REGION}&area=${area}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
