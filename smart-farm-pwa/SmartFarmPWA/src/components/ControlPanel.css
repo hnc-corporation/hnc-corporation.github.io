@@ -1,0 +1,56 @@
+.control-panel { padding: 0 0 20px; }
+.ctrl-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: #0d1a0d;
+  border-bottom: 1px solid #1a3a1a; margin-bottom: 12px;
+}
+.back-btn {
+  background: #1a3a1a; color: #4caf50; border: none;
+  border-radius: 8px; padding: 6px 12px; font-size: 13px;
+  font-weight: 700; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+}
+.back-btn:active { transform: scale(0.95); }
+.ctrl-title { flex: 1; color: #fff; font-size: 15px; font-weight: 700; }
+.ctrl-zone  { color: #4caf50; font-size: 12px; font-family: 'Space Mono', monospace; }
+.ctrl-body  { padding: 0 12px; }
+.ctrl-section-label {
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  color: #4caf50; letter-spacing: 2px; margin-bottom: 10px;
+}
+.device-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.device-row {
+  background: #111; border: 1px solid #1a1a1a; border-radius: 10px;
+  padding: 12px; display: flex; align-items: center; gap: 10px;
+}
+.device-info { flex: 1; }
+.device-name    { display: block; color: #fff; font-size: 14px; font-weight: 500; }
+.device-name-en {
+  display: block; color: #555; font-size: 10px;
+  font-family: 'Space Mono', monospace; letter-spacing: 1px;
+}
+.device-state {
+  font-family: 'Space Mono', monospace; font-size: 12px;
+  font-weight: 700; min-width: 32px; text-align: center;
+}
+.state-on  { color: #4caf50; }
+.state-off { color: #444; }
+.device-btns { display: flex; gap: 6px; }
+.ctrl-btn {
+  padding: 7px 12px; border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; opacity: 0.5; transition: all 0.15s;
+}
+.ctrl-btn:active { transform: scale(0.95); }
+.ctrl-btn.active { opacity: 1; }
+.ctrl-on  { background: #1b5e20; color: #4caf50; }
+.ctrl-off { background: #3e1010; color: #ef5350; }
+.ctrl-on.active  { background: #2e7d32; color: #fff; }
+.ctrl-off.active { background: #b71c1c; color: #fff; }
+.all-off-btn {
+  width: 100%; margin-bottom: 12px; background: #b71c1c;
+  height: 48px; border: none; border-radius: 10px; color: #fff;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.ctrl-log { background: #0a1020; border: 1px solid #0d2040; border-radius: 10px; padding: 12px; }
+.log-text { color: #aaa; font-size: 13px; }
