@@ -102,7 +102,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 }
 .logo{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:1px;white-space:nowrap}
 .logo span{color:var(--text)}
-.topbar-center{display:none} /* 모바일에서 현장명 숨김 */
+.topbar-center{display:none}
+.hide-mobile{display:none!important}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
 /* 사이드바: 모바일 숨김 */
@@ -132,7 +133,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 /* ═══════════════════════════════════════
    PC 레이아웃 (768px 이상)
 ═══════════════════════════════════════ */
-@media(min-width:768px){
+@media(min-width:900px){
   /* 앱 구조: 가로 */
   #app{flex-direction:column}
 
@@ -146,6 +147,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   .body-area{display:flex;flex:1;overflow:hidden}
 
   /* 사이드바: PC만 표시 */
+  .hide-mobile{display:flex!important}
   .sidebar{
     display:flex;flex-direction:column;
     width:180px;background:var(--surface);border-right:1px solid var(--border);
@@ -206,9 +208,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div class="topbar-right">
       <span id="sos-pill" class="pill pill-sos" style="display:none"><i class="ti ti-sos" style="font-size:12px;margin-right:3px"></i>SOS 1건</span>
-      <span class="pill pill-ok" style="display:none" id="ok-pill"><i class="ti ti-circle-filled" style="font-size:8px;margin-right:3px"></i>정상</span>
+      <span class="pill pill-ok hide-mobile" style="display:none" id="ok-pill"><i class="ti ti-circle-filled" style="font-size:8px;margin-right:3px"></i>정상</span>
       <span class="pill pill-time" id="clock"></span>
-      <span style="font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(255,107,53,.15);color:var(--accent2);border:1px solid rgba(255,107,53,.3);font-weight:600;white-space:nowrap">DEMO</span>
+      <span class="hide-mobile" style="font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(255,107,53,.15);color:var(--accent2);border:1px solid rgba(255,107,53,.3);font-weight:600;white-space:nowrap">DEMO</span>
     </div>
   </header>
 
