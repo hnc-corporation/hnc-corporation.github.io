@@ -664,7 +664,7 @@ const timeStr = dateObj => {
 //  API 호출
 // ══════════════════════════════════════════════
 async function fetchData(area) {
-  const url = '${PROXY_URL}?region=${REGION}&area=${area}';
+  const url = `${PROXY_URL}?region=${REGION}&area=${area}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
