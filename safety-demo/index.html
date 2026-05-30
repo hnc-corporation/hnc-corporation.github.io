@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SafeGuard — 스마트 안전관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+/* ═══════════════════════════════════════
+   리셋 & 변수
+═══════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0f1e;--surface:#111827;--card:#1a2235;--border:#1e3a5f;--border2:#243d5e;
+  --accent:#00d4ff;--accent2:#ff6b35;
+  --success:#00e676;--warn:#ffab00;--danger:#ff1744;
+  --text:#e8f4fd;--muted:#6b8cae;--muted2:#2a4a6a;
+  --font:'Noto Sans KR',-apple-system,sans-serif;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ═══════════════════════════════════════
+   공통 컴포넌트
+═══════════════════════════════════════ */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title i{font-size:15px;color:var(--accent)}
+.card-title .live{margin-left:auto;font-size:10px;color:var(--danger);font-weight:400;text-transform:none;letter-spacing:0;animation:blink 1s infinite}
+
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.kpi-label{font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.kpi-val{font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sensor-box{background:var(--surface);border-radius:10px;padding:12px;border:1px solid var(--border)}
+.sensor-name{font-size:11px;color:var(--muted);margin-bottom:4px}
+.sensor-val{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.sensor-unit{font-size:12px;color:var(--muted)}
+.gauge{height:5px;background:var(--border);border-radius:3px;margin-top:8px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:3px;transition:width .6s,background .4s}
+.sensor-limit{font-size:10px;color:var(--muted2);margin-top:5px}
+
+.worker-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.worker-info{flex:1;min-width:0}
+.worker-name{font-size:13px;font-weight:500}
+.worker-loc{font-size:11px;color:var(--muted);margin-top:2px}
+.worker-vitals{font-size:11px;color:var(--muted);margin-top:2px}
+.badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;flex-shrink:0;white-space:nowrap}
+.b-ok{background:rgba(0,230,118,.12);color:var(--success);border:1px solid rgba(0,230,118,.25)}
+.b-warn{background:rgba(255,171,0,.12);color:var(--warn);border:1px solid rgba(255,171,0,.25)}
+.b-danger{background:rgba(255,23,68,.12);color:var(--danger);border:1px solid rgba(255,23,68,.25);animation:blink .9s infinite}
+
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;font-size:12px;line-height:1.5}
+.alert-d{background:rgba(255,23,68,.07);border:1px solid rgba(255,23,68,.2)}
+.alert-w{background:rgba(255,171,0,.07);border:1px solid rgba(255,171,0,.2)}
+.alert-i{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15)}
+
+.map-wrap{background:#0d1929;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:80px 20px;text-align:center}
+.placeholder i{font-size:52px;color:var(--muted2)}
+.placeholder h2{font-size:18px;font-weight:600}
+.placeholder p{font-size:13px;color:var(--muted);max-width:300px;line-height:1.7}
+.coming{font-size:11px;color:var(--muted2);padding:6px 14px;border-radius:20px;border:1px dashed var(--border)}
+
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;white-space:nowrap;font-weight:500}
+.pill-sos{background:rgba(255,23,68,.15);color:var(--danger);border:1px solid rgba(255,23,68,.4);animation:blink .9s infinite}
+.pill-ok{background:rgba(0,230,118,.1);color:var(--success);border:1px solid rgba(0,230,118,.25)}
+.pill-time{background:rgba(0,212,255,.08);color:var(--accent);border:1px solid rgba(0,212,255,.2);font-variant-numeric:tabular-nums}
+
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.ai-chip{font-size:12px;padding:6px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:var(--font);transition:all .15s;text-align:left}
+.ai-chip:hover,.ai-chip:active{border-color:var(--accent);color:var(--accent)}
+.ai-input-row{display:flex;gap:8px;align-items:center}
+.ai-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:var(--font);-webkit-appearance:none;transition:border-color .15s}
+.ai-input:focus{border-color:var(--accent)}
+.ai-send{background:var(--accent);color:#000;border:none;border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.ai-send i{font-size:18px}
+.ai-send:disabled{background:var(--border);cursor:not-allowed}
+.ai-response{margin-top:12px;background:var(--surface);border-radius:10px;padding:14px;border:1px solid var(--border);font-size:13px;line-height:1.8;color:var(--text)}
+
+/* ═══════════════════════════════════════
+   모바일 레이아웃 (기본 — ~767px)
+═══════════════════════════════════════ */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;padding-top:calc(10px + var(--safe-top));
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.logo{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:1px;white-space:nowrap}
+.logo span{color:var(--text)}
+.topbar-center{display:none}
+.hide-mobile{display:none!important}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* 사이드바: 모바일 숨김 */
+.sidebar{display:none}
+
+/* 콘텐츠 */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;gap:10px}
+
+/* 하단 탭바: 모바일만 표시 */
+.tabbar{
+  display:flex;background:var(--surface);border-top:1px solid var(--border);
+  padding-bottom:var(--safe-bot);flex-shrink:0;
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 4px;cursor:pointer;border:none;background:transparent;
+  color:var(--muted);font-size:10px;font-family:var(--font);transition:color .15s;position:relative;
+}
+.tab i{font-size:20px}
+.tab.active{color:var(--accent)}
+.tab.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+.tab-badge{position:absolute;top:6px;right:calc(50% - 16px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:8px;min-width:16px;text-align:center}
+
+/* 모바일 KPI: 2x2 */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ═══════════════════════════════════════
+   PC 레이아웃 (768px 이상)
+═══════════════════════════════════════ */
+@media(min-width:900px){
+  /* 앱 구조: 가로 */
+  #app{flex-direction:column}
+
+  /* 상단 바: 현장명 표시 */
+  .topbar{padding:10px 20px}
+  .logo{font-size:20px}
+  .topbar-center{display:block;font-size:14px;font-weight:500}
+  .topbar-center i{color:var(--muted);margin-right:5px}
+
+  /* 바디 영역: 사이드바 + 콘텐츠 */
+  .body-area{display:flex;flex:1;overflow:hidden}
+
+  /* 사이드바: PC만 표시 */
+  .hide-mobile{display:flex!important}
+  .sidebar{
+    display:flex;flex-direction:column;
+    width:180px;background:var(--surface);border-right:1px solid var(--border);
+    flex-shrink:0;overflow-y:auto;
+  }
+  .nav-section{font-size:9px;color:var(--muted2);padding:10px 16px 3px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600}
+  .nav-item{
+    display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;
+    color:var(--muted);font-size:13px;border:none;background:transparent;
+    width:100%;text-align:left;border-right:2px solid transparent;transition:all .15s;font-family:var(--font);
+  }
+  .nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+  .nav-item.active{background:rgba(0,212,255,.08);color:var(--accent);border-right-color:var(--accent)}
+  .nav-item i{font-size:16px;flex-shrink:0}
+  .nav-badge{margin-left:auto;font-size:9px;padding:1px 5px;border-radius:8px;background:var(--danger);color:#fff;font-weight:700;animation:blink 1s infinite}
+  .nav-footer{margin-top:auto;padding:10px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted2)}
+
+  /* 콘텐츠 */
+  .content{padding:16px;gap:12px}
+
+  /* 탭바: PC에서 숨김 */
+  .tabbar{display:none}
+
+  /* PC KPI: 4열 */
+  .kpi-grid{grid-template-columns:repeat(4,1fr)}
+  .kpi-val{font-size:28px}
+
+  /* PC 중간 행: 지도 + 센서 나란히 */
+  .mid-row{display:flex;gap:12px}
+  .mid-row .map-card{flex:1.4 1 0;min-width:0}
+  .mid-row .sensor-card{flex:1 1 0;min-width:0}
+
+  /* PC 하단 행: 작업자 + 알람 나란히 */
+  .bot-row{display:flex;gap:12px}
+  .bot-row > *{flex:1 1 0;min-width:0}
+}
+
+/* ═══════════════════════════════════════
+   애니메이션
+═══════════════════════════════════════ */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.7}}
+@keyframes sos-ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(3);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── 상단 바 ── -->
+  <header class="topbar">
+    <div class="logo">SAFE<span>GUARD</span>
+      <span style="font-size:10px;font-weight:400;color:var(--muted);letter-spacing:0;margin-left:6px">스마트 안전관리</span>
+    </div>
+    <div class="topbar-center">
+      <i class="ti ti-building"></i>왕송 맑은물처리장
+    </div>
+    <div class="topbar-right">
+      <span id="sos-pill" class="pill pill-sos" style="display:none"><i class="ti ti-sos" style="font-size:12px;margin-right:3px"></i>SOS 1건</span>
+      <span class="pill pill-ok hide-mobile" style="display:none" id="ok-pill"><i class="ti ti-circle-filled" style="font-size:8px;margin-right:3px"></i>정상</span>
+      <span class="pill pill-time" id="clock"></span>
+      <span class="hide-mobile" style="font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(255,107,53,.15);color:var(--accent2);border:1px solid rgba(255,107,53,.3);font-weight:600;white-space:nowrap">DEMO</span>
+    </div>
+  </header>
+
+  <!-- ── 바디 (사이드바 + 콘텐츠) ── -->
+  <div class="body-area" style="display:flex;flex:1;overflow:hidden">
+
+    <!-- 사이드바 (PC) -->
+    <nav class="sidebar">
+      <div class="nav-section">관제</div>
+      <button class="nav-item active" onclick="navigate('dashboard',this)"><i class="ti ti-layout-dashboard"></i>실시간 현황</button>
+      <button class="nav-item" onclick="navigate('workers',this)"><i class="ti ti-users"></i>작업자 관리</button>
+      <button class="nav-item" onclick="navigate('floormap',this)"><i class="ti ti-map-2"></i>현장 배치도</button>
+      <div class="nav-section">모니터링</div>
+      <button class="nav-item" onclick="navigate('sensor',this)"><i class="ti ti-cpu"></i>IoT 센서</button>
+      <button class="nav-item" onclick="navigate('alerts',this)">
+        <i class="ti ti-bell"></i>알람 이력
+        <span class="nav-badge" id="nav-badge">3</span>
+      </button>
+      <div class="nav-section">AI</div>
+      <button class="nav-item" onclick="navigate('ai',this)"><i class="ti ti-robot"></i>AI 안전 분석</button>
+      <div class="nav-section">관리</div>
+      <button class="nav-item" onclick="navigate('permit',this)"><i class="ti ti-file-check"></i>작업허가 관리</button>
+      <button class="nav-item" onclick="navigate('settings',this)"><i class="ti ti-settings"></i>환경 설정</button>
+      <div class="nav-footer">
+        <div>SafeGuard Demo v1.0</div>
+        <div style="margin-top:2px;color:#1e3a5f">GitHub Pages</div>
+      </div>
+    </nav>
+
+    <!-- 콘텐츠 -->
+    <main class="content" id="content"></main>
+
+  </div>
+
+  <!-- ── 하단 탭바 (모바일) ── -->
+  <nav class="tabbar">
+    <button class="tab active" onclick="navigate('dashboard',this)">
+      <i class="ti ti-layout-dashboard"></i>현황
+    </button>
+    <button class="tab" onclick="navigate('workers',this)">
+      <i class="ti ti-users"></i>작업자
+    </button>
+    <button class="tab" onclick="navigate('sensor',this)">
+      <i class="ti ti-cpu"></i>센서
+    </button>
+    <button class="tab" onclick="navigate('alerts',this)">
+      <i class="ti ti-bell"></i>알람
+      <span class="tab-badge" id="tab-badge">3</span>
+    </button>
+    <button class="tab" onclick="navigate('ai',this)">
+      <i class="ti ti-robot"></i>AI
+    </button>
+  </nav>
+
+</div><!-- /#app -->
+
+<script>
+// ══════════════════════════════════
+// Claude API 키 (선택)
+// ══════════════════════════════════
+const CLAUDE_API_KEY = ''  // 'sk-ant-...' 입력 시 실제 AI 동작
+
+// ══════════════════════════════════
+// 가짜 데이터
+// ══════════════════════════════════
+const WORKERS_INIT = [
+  {id:'W01',name:'김현수',dept:'밀폐공간팀',floor:'B1F',zone:'장비실', status:'sos',    bpm:135,o2:18.2,co:42,  h2s:18.5,battery:72,sx:310,sy:128},
+  {id:'W02',name:'박지훈',dept:'밀폐공간팀',floor:'B1F',zone:'구역 C', status:'warning',bpm:108,o2:20.5,co:20,  h2s:9.2, battery:88,sx:300,sy:45},
+  {id:'W03',name:'이민지',dept:'배관팀',    floor:'B1F',zone:'구역 B', status:'normal', bpm:76, o2:20.9,co:10,  h2s:2.1, battery:91,sx:175,sy:45},
+  {id:'W04',name:'최재원',dept:'배관팀',    floor:'B1F',zone:'구역 A', status:'normal', bpm:82, o2:21.0,co:8,   h2s:1.8, battery:65,sx:60, sy:50},
+  {id:'W05',name:'정수연',dept:'전기팀',    floor:'1F', zone:'제어실', status:'normal', bpm:71, o2:21.0,co:5,   h2s:0.5, battery:95,sx:100,sy:128},
+  {id:'W06',name:'한동훈',dept:'안전팀',    floor:'1F', zone:'통로',   status:'normal', bpm:78, o2:20.8,co:6,   h2s:0.8, battery:80,sx:215,sy:60},
+]
+const ALERTS = [
+  {level:'d',icon:'ti-sos',        msg:'W01 김현수 SOS 발신 — B1F 장비실',            time:'방금'},
+  {level:'d',icon:'ti-flame',      msg:'H₂S 18.5ppm 초과 (기준 10ppm)',               time:'2분 전'},
+  {level:'d',icon:'ti-gas-station',msg:'CO 42ppm 위험 (기준 30ppm) — B1F 장비실',    time:'3분 전'},
+  {level:'w',icon:'ti-heart',      msg:'W02 박지훈 심박수 이상 108bpm',               time:'5분 전'},
+  {level:'w',icon:'ti-battery-2',  msg:'W04 최재원 배터리 부족 (65%)',                time:'11분 전'},
+  {level:'i',icon:'ti-check',      msg:'W03 이민지 밀폐공간 작업허가 완료',           time:'18분 전'},
+  {level:'i',icon:'ti-login',      msg:'W05 정수연 현장 입장 확인',                   time:'25분 전'},
+]
+const GAS = {
+  o2: {warn:19.5,danger:18.0,unit:'%',  label:'산소 O₂',      max:22},
+  co: {warn:25,  danger:50,  unit:'ppm',label:'일산화탄소 CO', max:100},
+  h2s:{warn:10,  danger:15,  unit:'ppm',label:'황화수소 H₂S', max:30},
+  bpm:{warn:100, danger:120, unit:'bpm',label:'심박수',         max:200},
+}
+
+// ══════════════════════════════════
+// 상태
+// ══════════════════════════════════
+let workers = JSON.parse(JSON.stringify(WORKERS_INIT))
+let curView = 'dashboard'
+
+// ══════════════════════════════════
+// 유틸
+// ══════════════════════════════════
+const isMobile = () => window.innerWidth < 768
+const sStat = (k,v) => { const l=GAS[k]; if(k==='o2') return v<=l.danger?'danger':v<=l.warn?'warning':'normal'; return v>=l.danger?'danger':v>=l.warn?'warning':'normal' }
+const sCol  = (k,v) => ({danger:'var(--danger)',warning:'var(--warn)',normal:'var(--success)'}[sStat(k,v)])
+const sPct  = (k,v) => { if(k==='o2') return Math.min(100,Math.max(0,((v-16)/6)*100)); return Math.min(100,Math.max(0,(v/GAS[k].max)*100)) }
+const wCol  = s => ({sos:'var(--danger)',warning:'var(--warn)',normal:'var(--success)'}[s])
+const wLbl  = s => ({sos:'SOS!',warning:'주의',normal:'정상'}[s])
+const wBadge= s => ({sos:'badge b-danger',warning:'badge b-warn',normal:'badge b-ok'}[s])
+const batIco= p => p>75?'ti-battery-4':p>50?'ti-battery-3':p>25?'ti-battery-2':'ti-battery-1'
+
+// ══════════════════════════════════
+// 실시간 시뮬레이션
+// ══════════════════════════════════
+function tick() {
+  workers = workers.map(w => {
+    if(w.status==='sos') return {...w,bpm:Math.min(180,Math.max(120,w.bpm+(Math.random()-.4)*4)),o2:+Math.max(17,(w.o2+(Math.random()-.6)*.1)).toFixed(1),co:+Math.min(80,(w.co+(Math.random()-.3)*2)).toFixed(1),h2s:+Math.min(25,(w.h2s+(Math.random()-.3)*.5)).toFixed(1)}
+    if(w.status==='warning') return {...w,bpm:Math.max(95,Math.min(115,w.bpm+(Math.random()-.5)*4))}
+    return {...w,bpm:Math.max(60,Math.min(95,w.bpm+(Math.random()-.5)*3)),o2:+Math.max(20,Math.min(21.5,(w.o2+(Math.random()-.5)*.05))).toFixed(2),co:+Math.max(0,Math.min(20,(w.co+(Math.random()-.5)*1))).toFixed(1),h2s:+Math.max(0,Math.min(5,(w.h2s+(Math.random()-.5)*.2))).toFixed(1)}
+  })
+  if(curView==='dashboard') renderDashboard()
+  if(curView==='workers')   renderWorkers()
+  if(curView==='sensor')    renderSensor()
+}
+
+// ══════════════════════════════════
+// SVG 지도 (공통)
+// ══════════════════════════════════
+function buildMap() {
+  return `<div class="map-wrap">
+    <svg viewBox="0 0 390 175" width="100%" style="display:block">
+      ${[{x:20,y:20,w:100,h:65,lb:'구역 A'},{x:140,y:20,w:110,h:65,lb:'구역 B'},{x:270,y:20,w:100,h:65,lb:'구역 C'},{x:20,y:105,w:240,h:55,lb:'통로'},{x:278,y:105,w:92,h:55,lb:'장비실'}].map(z=>`
+        <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="4" fill="#0f2340" stroke="#1e3a5f" stroke-width="1"/>
+        <text x="${z.x+z.w/2}" y="${z.y+z.h/2+4}" text-anchor="middle" fill="#2a4a6a" font-size="10" font-family="'Noto Sans KR',sans-serif">${z.lb}</text>
+      `).join('')}
+      ${[[85,52],[205,87],[290,98]].map(([x,y])=>`<rect x="${x-9}" y="${y-9}" width="18" height="18" rx="3" fill="rgba(255,107,53,.8)"/><text x="${x}" y="${y+4}" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">G</text>`).join('')}
+      ${workers.map(w=>{const col=wCol(w.status),isSos=w.status==='sos';return `
+        ${isSos?`<circle cx="${w.sx}" cy="${w.sy}" r="10" fill="none" stroke="${col}" stroke-width="1.5" opacity=".6" style="animation:sos-ring 1.4s ease-out infinite"/>
+        <circle cx="${w.sx}" cy="${w.sy}" r="16" fill="none" stroke="${col}" stroke-width="1" opacity=".3" style="animation:sos-ring 1.4s ease-out infinite .4s"/>`:''}
+        <circle cx="${w.sx}" cy="${w.sy}" r="${isSos?10:8}" fill="${col}" opacity=".92" style="animation:pulse 2s ease-in-out infinite"/>
+        <text x="${w.sx}" y="${w.sy+4}" text-anchor="middle" fill="${isSos?'#fff':'#000'}" font-size="${isSos?7:7.5}" font-weight="bold" font-family="'Noto Sans KR',sans-serif">${isSos?'SOS':w.id.replace('W0','W')}</text>`}).join('')}
+      ${[['#00e676','정상'],['#ffab00','주의'],['#ff1744','SOS']].map(([c,l],i)=>`<circle cx="${15+i*62+5}" cy="168" r="5" fill="${c}"/><text x="${15+i*62+14}" y="173" fill="#3a5a7a" font-size="9" font-family="'Noto Sans KR',sans-serif">${l}</text>`).join('')}
+      <rect x="205" y="163" width="11" height="11" rx="2" fill="rgba(255,107,53,.8)"/><text x="220" y="173" fill="#3a5a7a" font-size="9" font-family="'Noto Sans KR',sans-serif">가스센서</text>
+    </svg>
+  </div>`
+}
+
+// ══════════════════════════════════
+// 센서 HTML (공통)
+// ══════════════════════════════════
+function buildSensors(dw) {
+  if(!dw) return '<p style="color:var(--muted);font-size:13px;padding:10px 0">모든 구역 정상</p>'
+  return `<div class="sensor-grid">
+    ${Object.entries({o2:dw.o2,co:dw.co,h2s:dw.h2s,bpm:Math.round(dw.bpm)}).map(([k,v])=>`
+      <div class="sensor-box" style="border-color:${sStat(k,v)==='danger'?'rgba(255,23,68,.3)':sStat(k,v)==='warning'?'rgba(255,171,0,.3)':'var(--border)'}">
+        <div class="sensor-name">${GAS[k].label}</div>
+        <div class="sensor-val" style="color:${sCol(k,v)}">${k==='bpm'?Math.round(v):v.toFixed(1)}<span class="sensor-unit"> ${GAS[k].unit}</span></div>
+        <div class="gauge"><div class="gauge-fill" style="width:${sPct(k,v)}%;background:${sCol(k,v)}"></div></div>
+        <div class="sensor-limit">기준: ${k==='o2'?`≥${GAS[k].danger}`:`≤${GAS[k].warn}`}${GAS[k].unit}</div>
+      </div>`).join('')}
+  </div>`
+}
+
+// ══════════════════════════════════
+// 뷰 렌더러
+// ══════════════════════════════════
+function renderDashboard() {
+  const kpi={total:workers.length,safe:workers.filter(w=>w.status==='normal').length,warning:workers.filter(w=>w.status==='warning').length,sos:workers.filter(w=>w.status==='sos').length}
+  const dw = workers.find(w=>w.status==='sos')||workers.find(w=>w.status==='warning')
+  const mobile = isMobile()
+
+  const kpiCards = [
+    {label:'현장 인원',val:kpi.total,  sub:'작업 승인',             col:'var(--accent)', bor:'rgba(0,212,255,.5)',icon:'ti-users'},
+    {label:'정상 작업',val:kpi.safe,   sub:'생체·가스 정상',         col:'var(--success)',bor:'rgba(0,230,118,.5)',icon:'ti-shield-check'},
+    {label:'주의 필요',val:kpi.warning,sub:'심박/가스 이상',         col:'var(--warn)',   bor:'rgba(255,171,0,.5)',icon:'ti-alert-triangle'},
+    {label:'SOS',      val:kpi.sos,    sub:kpi.sos>0?'즉시 대응!':'이상 없음',col:'var(--danger)',bor:'rgba(255,23,68,.5)',icon:'ti-sos'},
+  ]
+
+  const kpiHtml = `<div class="kpi-grid">
+    ${kpiCards.map(c=>`
+      <div class="kpi" style="border-top:3px solid ${c.bor}">
+        <div class="kpi-label"><i class="ti ${c.icon}" style="font-size:13px"></i>${c.label}</div>
+        <div class="kpi-val" style="color:${c.col}">${c.val}</div>
+        <div class="kpi-sub" style="${c.label==='SOS'&&kpi.sos>0?'color:var(--danger);animation:blink .9s infinite':''}">${c.sub}</div>
+      </div>`).join('')}
+  </div>`
+
+  const mapCard = `<div class="card ${mobile?'':'map-card'}">
+    <div class="card-title"><i class="ti ti-map-2"></i>현장 배치도 — B1F</div>
+    ${buildMap()}
+  </div>`
+
+  const sensorCard = `<div class="card ${mobile?'':'sensor-card'}">
+    <div class="card-title"><i class="ti ti-activity"></i>위험 구역 센서 <span class="live">● LIVE</span></div>
+    ${buildSensors(dw)}
+  </div>`
+
+  const workerSnippet = `<div class="card">
+    <div class="card-title"><i class="ti ti-users"></i>작업자 현황
+      <span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">${workers.length}명</span>
+    </div>
+    ${[...workers].sort((a,b)=>({sos:0,warning:1,normal:2}[a.status]-{sos:0,warning:1,normal:2}[b.status])).slice(0,4).map(w=>`
+      <div class="worker-row" style="border-left:3px solid ${w.status==='sos'?'var(--danger)':w.status==='warning'?'var(--warn)':'transparent'}">
+        <div class="avatar" style="background:${w.status==='sos'?'rgba(255,23,68,.15)':w.status==='warning'?'rgba(255,171,0,.15)':'rgba(0,230,118,.15)'};color:${wCol(w.status)};border:1px solid ${w.status==='sos'?'rgba(255,23,68,.3)':w.status==='warning'?'rgba(255,171,0,.3)':'rgba(0,230,118,.3)'}">${w.status==='sos'?'SOS':w.name.slice(0,2)}</div>
+        <div class="worker-info">
+          <div class="worker-name">${w.name}</div>
+          <div class="worker-loc"><i class="ti ti-map-pin" style="font-size:10px"></i> ${w.floor} ${w.zone}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--muted)">
+          <div style="color:${w.bpm>=120?'var(--danger)':w.bpm>=100?'var(--warn)':'var(--muted)'}">${Math.round(w.bpm)}bpm</div>
+        </div>
+        <span class="${wBadge(w.status)}">${wLbl(w.status)}</span>
+      </div>`).join('')}
+  </div>`
+
+  const alertSnippet = `<div class="card">
+    <div class="card-title"><i class="ti ti-bell-ringing"></i>최근 알람</div>
+    ${ALERTS.slice(0,4).map(a=>`
+      <div class="alert-item alert-${a.level}">
+        <i class="ti ${a.icon}" style="font-size:16px;flex-shrink:0;margin-top:1px;color:${a.level==='d'?'var(--danger)':a.level==='w'?'var(--warn)':'var(--accent)'}"></i>
+        <div style="flex:1">${a.msg}</div>
+        <div style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;margin-left:8px">${a.time}</div>
+      </div>`).join('')}
+  </div>`
+
+  if(mobile) {
+    // 모바일: 세로 스택
+    document.getElementById('content').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:2px">
+        <div>
+          <div style="font-size:15px;font-weight:700">왕송 맑은물처리장</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px"><i class="ti ti-map-pin" style="font-size:11px"></i> B1F 밀폐공간 작업 중</div>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:${kpi.sos>0?'var(--danger)':kpi.warning>0?'var(--warn)':'var(--success)'}">${kpi.sos>0?'위험':'안전'}</div>
+      </div>
+      ${kpiHtml}${mapCard}${sensorCard}${workerSnippet}${alertSnippet}`
+  } else {
+    // PC: 지도+센서 나란히, 작업자+알람 나란히
+    document.getElementById('content').innerHTML = `
+      ${kpiHtml}
+      <div class="mid-row">${mapCard}${sensorCard}</div>
+      <div class="bot-row">${workerSnippet}${alertSnippet}</div>`
+  }
+}
+
+function renderWorkers() {
+  const sorted=[...workers].sort((a,b)=>({sos:0,warning:1,normal:2}[a.status]-{sos:0,warning:1,normal:2}[b.status]))
+  document.getElementById('content').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);padding:0 2px;margin-bottom:4px">총 ${workers.length}명 입장 중</div>
+    ${sorted.map(w=>`
+      <div class="worker-row" style="border-left:3px solid ${w.status==='sos'?'var(--danger)':w.status==='warning'?'var(--warn)':'transparent'}">
+        <div class="avatar" style="background:${w.status==='sos'?'rgba(255,23,68,.15)':w.status==='warning'?'rgba(255,171,0,.15)':'rgba(0,230,118,.15)'};color:${wCol(w.status)};border:1px solid ${w.status==='sos'?'rgba(255,23,68,.3)':w.status==='warning'?'rgba(255,171,0,.3)':'rgba(0,230,118,.3)'}">${w.status==='sos'?'SOS':w.name.slice(0,2)}</div>
+        <div class="worker-info">
+          <div class="worker-name">${w.name} <span style="font-size:10px;color:var(--muted);font-weight:400">${w.dept}</span></div>
+          <div class="worker-loc"><i class="ti ti-map-pin" style="font-size:10px"></i> ${w.floor} ${w.zone}</div>
+          <div class="worker-vitals">
+            <i class="ti ti-heart" style="font-size:10px;color:${w.bpm>=120?'var(--danger)':w.bpm>=100?'var(--warn)':'var(--muted)'}"></i>
+            <span style="color:${w.bpm>=120?'var(--danger)':w.bpm>=100?'var(--warn)':'var(--muted)'}">${Math.round(w.bpm)}bpm</span>
+            &nbsp;<i class="ti ${batIco(w.battery)}" style="font-size:10px;color:${w.battery<30?'var(--danger)':'var(--muted)'}"></i>
+            <span style="color:var(--muted)">${w.battery}%</span>
+            &nbsp;<span style="color:${w.o2<18?'var(--danger)':w.o2<19.5?'var(--warn)':'var(--muted)'}">O₂ ${w.o2.toFixed(1)}%</span>
+          </div>
+        </div>
+        <span class="${wBadge(w.status)}">${wLbl(w.status)}</span>
+      </div>`).join('')}`
+}
+
+function renderSensor() {
+  const dw=workers.find(w=>w.status==='sos')||workers.find(w=>w.status==='warning')
+  document.getElementById('content').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);padding:0 2px;margin-bottom:4px">
+      ${dw?`<i class="ti ti-map-pin" style="font-size:12px"></i> ${dw.floor} ${dw.zone} — ${dw.name}`:'전체 구역'}
+      <span style="margin-left:8px;font-size:10px;color:var(--danger);animation:blink 1s infinite">● LIVE</span>
+    </div>
+    <div class="card">${buildSensors(dw)}</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-info-circle"></i>가스 기준치 안내</div>
+      <div style="font-size:12px;line-height:2.2;color:var(--muted)">
+        <div>산소(O₂) — 18% 이상 유지 / 16% 미만 즉시 대피</div>
+        <div>CO &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 허용기준 30ppm / 50ppm 위험</div>
+        <div>H₂S &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 허용기준 10ppm / 15ppm 위험</div>
+        <div style="margin-top:6px;font-size:11px;color:var(--muted2)">근거: 산업안전보건기준규칙 제619조</div>
+      </div>
+    </div>`
+}
+
+function renderAlerts() {
+  document.getElementById('content').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);padding:0 2px;margin-bottom:4px">총 ${ALERTS.length}건</div>
+    ${ALERTS.map(a=>`
+      <div class="alert-item alert-${a.level}">
+        <i class="ti ${a.icon}" style="font-size:18px;flex-shrink:0;margin-top:1px;color:${a.level==='d'?'var(--danger)':a.level==='w'?'var(--warn)':'var(--accent)'}"></i>
+        <div style="flex:1">${a.msg}<div style="font-size:10px;color:var(--muted);margin-top:3px">${a.time}</div></div>
+      </div>`).join('')}`
+}
+
+function renderAI() {
+  const chips=['H₂S 농도가 위험한가요?','SOS 대응 절차 안내','밀폐공간 작업 허가 요건','작업 중단 기준은?']
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <div class="card-title"><i class="ti ti-robot"></i>AI 안전 분석
+        <span style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,212,255,.08);color:${CLAUDE_API_KEY?'var(--success)':'var(--warn)'};font-weight:400;text-transform:none;letter-spacing:0">${CLAUDE_API_KEY?'🟢 연결됨':'🟡 데모 모드'}</span>
+      </div>
+      <div class="ai-chips">
+        ${chips.map(q=>`<button class="ai-chip" onclick="runAI('${q.replace(/'/g,"\\'")}',document.getElementById('ai-resp'),document.getElementById('ai-inp'),document.getElementById('ai-btn'))">${q}</button>`).join('')}
+      </div>
+      <div class="ai-input-row">
+        <input class="ai-input" id="ai-inp" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')runAI(this.value,document.getElementById('ai-resp'),this,document.getElementById('ai-btn'))">
+        <button class="ai-send" id="ai-btn" onclick="const i=document.getElementById('ai-inp');runAI(i.value,document.getElementById('ai-resp'),i,this)"><i class="ti ti-send"></i></button>
+      </div>
+      <div class="ai-response" id="ai-resp" style="color:var(--muted)">현장 실시간 데이터를 바탕으로 위험도 분석 및 대응 절차를 안내합니다.</div>
+    </div>`
+}
+
+function renderPlaceholder(title,icon,desc) {
+  document.getElementById('content').innerHTML=`<div class="card placeholder"><i class="ti ${icon}"></i><h2>${title}</h2><p>${desc}</p><div class="coming">실 IoT/DB 연동 후 활성화 예정</div></div>`
+}
+
+// ══════════════════════════════════
+// 라우터 — 사이드바/탭바 둘 다 처리
+// ══════════════════════════════════
+function navigate(view, btn) {
+  curView = view
+  // 사이드바 활성화
+  document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'))
+  // 탭바 활성화
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+
+  if(btn) btn.classList.add('active')
+
+  // 사이드바에서 클릭했을 때 탭바도 맞춰주기
+  const tabMap = {dashboard:0,workers:1,sensor:2,alerts:3,ai:4}
+  const navMap = {dashboard:0,workers:1,floormap:2,sensor:3,alerts:4,ai:5}
+  const tabs = document.querySelectorAll('.tab')
+  const navs = document.querySelectorAll('.nav-item')
+  if(tabMap[view]!==undefined) tabs[tabMap[view]]?.classList.add('active')
+  if(navMap[view]!==undefined) navs[navMap[view]]?.classList.add('active')
+
+  switch(view) {
+    case 'dashboard': renderDashboard(); break
+    case 'workers':   renderWorkers();   break
+    case 'sensor':    renderSensor();    break
+    case 'alerts':    renderAlerts();    break
+    case 'ai':        renderAI();        break
+    case 'floormap':  renderPlaceholder('현장 배치도','ti-map-2','전체 층별 배치도 및 Beacon 위치 추적. LoRa 게이트웨이 연동 후 실시간 위치가 표시됩니다.'); break
+    case 'permit':    renderPlaceholder('작업허가 관리','ti-file-check','밀폐공간·고소작업 허가서 발행 및 전자 서명. 백엔드 연동 후 활성화됩니다.'); break
+    default:          renderPlaceholder('준비 중','ti-settings','해당 기능은 준비 중입니다.'); break
+  }
+  document.getElementById('content').scrollTop = 0
+}
+
+// ══════════════════════════════════
+// AI 분석
+// ══════════════════════════════════
+async function runAI(q,respEl,inpEl,btnEl) {
+  q=(q||'').trim(); if(!q) return
+  if(inpEl) inpEl.value=q
+  respEl.style.color='var(--muted)'
+  respEl.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:18px"></i> 분석 중...'
+  if(btnEl) btnEl.disabled=true
+  const sos=workers.find(w=>w.status==='sos')
+  const sys=`당신은 산업 현장 안전관리 AI "SafeGuard AI"입니다. 중대재해처벌법, 산업안전보건법, KOSHA 기준을 숙지하고 있습니다.\n현재 데이터: H₂S ${sos?.h2s?.toFixed(1)||'-'}ppm(기준10), CO ${sos?.co?.toFixed(1)||'-'}ppm(기준30), O₂ ${sos?.o2?.toFixed(1)||'-'}%(기준18이상), SOS:${sos?sos.name:'없음'}\n한국어로 위험도(🔴/🟡/🟢)와 즉시 조치사항을 번호 목록으로 6줄 이내 답변하세요.`
+  try {
+    if(!CLAUDE_API_KEY) throw new Error('NO_KEY')
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,stream:true,system:sys,messages:[{role:'user',content:q}]})})
+    if(!res.ok) throw new Error('API 오류')
+    respEl.style.color='var(--text)'; respEl.innerHTML=''
+    const reader=res.body.getReader(),dec=new TextDecoder(); let buf=''
+    while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop();for(const line of lines){if(!line.startsWith('data: '))continue;try{const j=JSON.parse(line.slice(6));if(j.delta?.text)respEl.innerHTML+=j.delta.text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--accent)">$1</strong>')}catch(_){}}}
+  } catch(e) {
+    respEl.style.color='var(--text)'
+    respEl.innerHTML=`🔴 <strong style="color:var(--accent)">위험 — 즉시 대응 필요</strong><br><br>H₂S ${sos?.h2s?.toFixed(1)||'18.5'}ppm, CO ${sos?.co?.toFixed(1)||'42'}ppm으로 허용기준 초과.<br><br><strong style="color:var(--accent)">즉시 조치:</strong><br>1. 해당 구역 작업 즉시 중단<br>2. 전 작업자 지상 대피<br>3. 강제 환기 장치 가동<br>4. SOS 발신자 구조팀 투입<br>5. 119 신고 및 안전관리자 보고<br><br><span style="color:var(--muted);font-size:11px">📋 근거: 산업안전보건기준규칙 제619조${!CLAUDE_API_KEY?'<br>※ AI 연결: CLAUDE_API_KEY 입력 후 사용 가능':''}</span>`
+  } finally { if(btnEl) btnEl.disabled=false }
+}
+
+// ══════════════════════════════════
+// 초기 실행
+// ══════════════════════════════════
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('ko-KR',{hour12:false})}
+updateClock()
+setInterval(updateClock,1000)
+setInterval(tick,2500)
+
+// 창 크기 바뀌면 대시보드 재렌더 (PC↔모바일 전환)
+window.addEventListener('resize',()=>{if(curView==='dashboard')renderDashboard()})
+
+renderDashboard()
+document.getElementById('sos-pill').style.display='flex'
+document.getElementById('ok-pill').style.display='flex'
+</script>
+</body>
+</html>
