@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/smartfarm-pwa2/sw.js', { scope: '/smartfarm-pwa2/' })})}
